@@ -7,6 +7,7 @@ import torch.nn as nn
 from pytorch_lightning import LightningModule
 from torchmetrics import MaxMetric
 from torchmetrics.classification.accuracy import Accuracy
+from hydra.utils import instantiate
 
 
 class BasicLitModule(LightningModule):
@@ -22,8 +23,11 @@ class BasicLitModule(LightningModule):
         lr: float = 0.001,
         weight_decay: float = 0.0005,
         task: str = "tool",
-        # todo add the needed variable to the basic.yaml and write in here
+        # DONE(? TODO add the needed variable to the basic.yaml and write in here
         # you could check the https://hydra.cc/docs/advanced/instantiate_objects/overview/ for how it's work
+        use_timm: bool = False,
+        temporal_model: object = {},
+        mlp: object = {},
     ):
         super().__init__()
 
@@ -36,28 +40,43 @@ class BasicLitModule(LightningModule):
         # it also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
 
+        self.optim = optim
+        self.lr = lr
+        self.weight_decay = weight_decay
+        self.task = task
+        self.net = net
 
-        # todo: set up ResNet and LSTM, the following structure is a easy guide to implement
+
+
+        # TODO: set up ResNet and LSTM, the following structure is a easy guide to implement
         # you could add any model component or write all model to the ./components folder
         # i think it might be more appropriate to write in components, so that we could use config to 
         # easily change different model
 
 
-        # todo: whether use the timm library or torch hub to load pretrained backbone model
+        # DONE TODO: whether use the timm library or torch hub to load pretrained backbone model
         # should set a use_timm = true or false to determine
-        self.feature_extractor = ...
-
-        # todo: not sure what name to use 
-        # load the LSTM or other rnn based model it could be determine by config files
-        self.temporal_model = ...
-
-
-        # todo: set up the final linear or with some activation functions
-        self.mlp = nn.Sequential(
-            ...
+        self.feature_extractor = timm.create_model(
+            'resnet34', 
+            pretrained = use_timm, 
+            # num_classes = ,
         )
 
-        # todo: choose the proper loss function, since i remember CE is better
+        # not sure what name to use 
+        # DONE TODO: load the LSTM or other rnn based model it could be determine by config files
+        self.temporal_model = instantiate(temporal_model)
+
+        # DONE TODO: set up the final linear or with some activation functions
+        self.mlp = nn.Sequential(
+            nn.Linear(mlp.input_size, 32),
+            nn.BatchNorm1d(32),
+            nn.ReLU(),
+            nn.Linear(32, mlp.output_size),
+            nn.BatchNorm1d(mlp.output_size),
+            nn.ReLU(),
+        )
+
+        # DONE TODO: choose the proper loss function, since i remember CE is better
         # use in one class for one instance ? or maybe i'm wrong
         self.criterion = torch.nn.CrossEntropyLoss()
 
@@ -75,12 +94,12 @@ class BasicLitModule(LightningModule):
         return a tensor in size B * ? * (4 if task is action else 7)
         where B is the Batch Size ? according to the model setting
         '''
-        # todo: finish the foward part
+        # DONE TODO: finish the foward part
+        x = self.feature_extractor(x)
+        x = self.temporal_model(x)
+        x = self.mlp(x)
 
-        # x = self.net(x)
-        # return x
-
-        raise NotImplementedError
+        return x
 
     def step(self, batch: Any):
         '''
@@ -100,14 +119,13 @@ class BasicLitModule(LightningModule):
         y: correspond to the task it should be action or tool
         '''
 
-        # todo: finish the step part and choose the proper loss function for multi-classification
-        # x, y = batch
-        # logits = self.forward(x)
-        # loss = self.criterion(logits, y)
-        # preds = torch.argmax(logits, dim=1)
-        # return loss, preds, y
-
-        raise NotImplementedError
+        # TODO: finish the step part and choose the proper loss function for multi-classification
+        
+        x, y = batch["image"], batch[self.task]
+        logits = self.forward(x)
+        loss = self.criterion(logits, y)
+        preds = torch.argmax(logits, dim=1)
+        return loss, preds, y
 
     def training_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.step(batch)
@@ -169,12 +187,10 @@ class BasicLitModule(LightningModule):
         """
 
         # change the optimizer could be determine by config files, 
-        # the following is the code i guess it should work 
+        # the following is the code i guess it should work
 
-        # return getattr(torch.optim, self.haparms.optim)(
-        #     parameters=self.parameters(), 
-        #     lr=self.hparams.lr,
-        #     weight_decay=self.hparams.weight_decay,
-        # )
-
-        raise NotImplementedError
+        return getattr(torch.optim, self.optim)(
+            params = self.parameters(), 
+            lr = self.lr,
+            weight_decay = self.weight_decay,
+        )

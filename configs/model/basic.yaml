@@ -1,14 +1,21 @@
-_target_: src.models.mnist_module.MNISTLitModule
-optim: Adam
-lr: 0.001
-weight_decay: 0.0005
-task: tool
+model:
+  _target_: src.models.basic_module.BasicLitModule
+  optim: Adam
+  lr: 0.001
+  weight_decay: 0.0005
+  task: tool
+  use_timm: True
 
-# to implement ??
-# net:
-#   _target_: src.models.components.simple_dense_net.SimpleDenseNet
-#   input_size: 784
-#   lin1_size: 256
-#   lin2_size: 256
-#   lin3_size: 256
-#   output_size: 10
+  temporal_model:
+    _target_: src.models.components.simple_LSTM.SimpleLSTM
+    input_size: 8
+    hidden_size: 12
+    num_layers: 1
+
+  mlp:
+    _target_: src.models.basic_module.mlp
+    input_size: 256
+    output_size: 128
+
+# TODO trainer ?
+# trainer:
