@@ -1,7 +1,5 @@
 #!/bin/bash
 
-pip install gdown --upgrade
-
 gdown https://drive.google.com/uc?id=1fjpD36RdVF4pnCMLmPP6ZB8cu6EkhbBt
 
 mv HeiChole.zip data/HeiChole_data
