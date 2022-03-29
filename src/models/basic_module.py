@@ -14,7 +14,7 @@ class BasicLitModule(LightningModule):
     def __init__(
         self,
         temporal_model: torch.nn.Module,
-        mlp: OmegaConf,
+        mlp: object,
         optim: str = "Adam",
         lr: float = 0.001,
         weight_decay: float = 0.0005,
