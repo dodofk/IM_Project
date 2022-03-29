@@ -10,7 +10,7 @@ class SimpleLSTM(nn.Module):
         super().__init__()
     
         self.model = nn.Sequential(
-            nn.LSTM(input_size, hidden_size, num_layers),
+            nn.LSTM(input_size, hidden_size, num_layers, bidirectional=True),
         )
     def forward (self, x): 
         return self.model(x)

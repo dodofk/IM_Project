@@ -42,6 +42,7 @@ class BasicLitModule(LightningModule):
         self.feature_extractor = timm.create_model(
             "resnet34",
             pretrained=use_timm,
+            in_chans = 1,
             # num_classes = ,
         )
 
@@ -80,7 +81,7 @@ class BasicLitModule(LightningModule):
         """
         # DONE TODO: finish the foward part
         x = self.feature_extractor(x)
-        x = self.temporal_model(x)
+        x, _ = self.hparams.temporal_model(x)
         x = self.mlp(x)
 
         return x
@@ -104,8 +105,9 @@ class BasicLitModule(LightningModule):
         """
 
         # TODO: finish the step part and choose the proper loss function for multi-classification
-
-        x, y = batch["image"], batch[self.hparams.task]
+        # print(batch[self.hparams.task])
+        # x, y = batch["image"], batch[self.hparams.task]
+        x, y = batch
         logits = self.forward(x)
         loss = self.criterion(logits, y)
         preds = torch.argmax(logits, dim=1)

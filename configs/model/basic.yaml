@@ -6,11 +6,11 @@ task: tool
 use_timm: True
 
 mlp:
-  input_size: 256
+  input_size: 128
   output_size: 128
 
 temporal_model:
   _target_: src.models.components.simple_LSTM.SimpleLSTM
-  input_size: 8
-  hidden_size: 12
+  input_size: 1000
+  hidden_size: 64
   num_layers: 1
