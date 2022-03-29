@@ -1,4 +1,5 @@
 from typing import Any, List, Dict
+from omegaconf import OmegaConf
 from webbrowser import get
 
 import timm
@@ -7,56 +8,47 @@ import torch.nn as nn
 from pytorch_lightning import LightningModule
 from torchmetrics import MaxMetric
 from torchmetrics.classification.accuracy import Accuracy
-from hydra.utils import instantiate
 
 
 class BasicLitModule(LightningModule):
-    """
-    Read the docs:
-        https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html
-    """
-
     def __init__(
         self,
         temporal_model: torch.nn.Module,
+        mlp: OmegaConf,
         optim: str = "Adam",
         lr: float = 0.001,
         weight_decay: float = 0.0005,
         task: str = "tool",
-        # DONE(? TODO add the needed variable to the basic.yaml and write in here
-        # you could check the https://hydra.cc/docs/advanced/instantiate_objects/overview/ for how it's work
         use_timm: bool = False,
-        mlp: object = {},
     ):
         super().__init__()
 
-        '''
+        """
         First implement two model which could handle tool detection or action detection, and could be choose 
         by basic.yaml config about task (self.hparams.task)
-        '''
+        """
 
         # this line allows to access init params with 'self.hparams' attribute
         # it also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
 
-
         # TODO: set up ResNet and LSTM, the following structure is a easy guide to implement
         # you could add any model component or write all model to the ./components folder
-        # i think it might be more appropriate to write in components, so that we could use config to 
+        # i think it might be more appropriate to write in components, so that we could use config to
         # easily change different model
-
 
         # DONE TODO: whether use the timm library or torch hub to load pretrained backbone model
         # should set a use_timm = true or false to determine
         self.feature_extractor = timm.create_model(
-            'resnet34', 
-            pretrained = use_timm, 
+            "resnet34",
+            pretrained=use_timm,
             # num_classes = ,
         )
 
-        # not sure what name to use 
+        # not sure what name to use
         # DONE TODO: load the LSTM or other rnn based model it could be determine by config files
-        self.temporal_model = instantiate(temporal_model)
+        # calling the falling line will error, since u didn't pass config to instantiate
+        # self.temporal_model = instantiate(temporal_model)
 
         # DONE TODO: set up the final linear or with some activation functions
         self.mlp = nn.Sequential(
@@ -82,10 +74,10 @@ class BasicLitModule(LightningModule):
         self.val_acc_best = MaxMetric()
 
     def forward(self, x):
-        '''
+        """
         return a tensor in size B * ? * (4 if task is action else 7)
         where B is the Batch Size ? according to the model setting
-        '''
+        """
         # DONE TODO: finish the foward part
         x = self.feature_extractor(x)
         x = self.temporal_model(x)
@@ -94,25 +86,25 @@ class BasicLitModule(LightningModule):
         return x
 
     def step(self, batch: Any):
-        '''
+        """
         batch would a be a dict might contains the following things
-        *image*: the frame image 
+        *image*: the frame image
         *action*: the action [Action type 0, Action type 1, Action type 3, Action type 4]
         *tool*: the tool [Tool 0, Tool 1, ..., Tool 6]
-        
+
         ex:
         image = batch["image"]
-        self.forward(image) 
+        self.forward(image)
 
-        return 
+        return
 
         loss: the loss by the loss_fn
         preds: the pred by our model (i guess it would be sth like preds = torch.argmax(logits, dim=-1))
         y: correspond to the task it should be action or tool
-        '''
+        """
 
         # TODO: finish the step part and choose the proper loss function for multi-classification
-        
+
         x, y = batch["image"], batch[self.hparams.task]
         logits = self.forward(x)
         loss = self.criterion(logits, y)
@@ -149,7 +141,9 @@ class BasicLitModule(LightningModule):
     def validation_epoch_end(self, outputs: List[Any]):
         acc = self.val_acc.compute()  # get val accuracy from current epoch
         self.val_acc_best.update(acc)
-        self.log("val/acc_best", self.val_acc_best.compute(), on_epoch=True, prog_bar=True)
+        self.log(
+            "val/acc_best", self.val_acc_best.compute(), on_epoch=True, prog_bar=True
+        )
 
     def test_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.step(batch)
@@ -178,11 +172,11 @@ class BasicLitModule(LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
 
-        # change the optimizer could be determine by config files, 
+        # change the optimizer could be determine by config files,
         # the following is the code i guess it should work
 
-        return getattr(torch.optim, self.optim)(
-            params = self.parameters(), 
-            lr = self.hparams.lr,
-            weight_decay = self.hparams.weight_decay,
+        return getattr(torch.optim, self.hparams.optim)(
+            params=self.parameters(),
+            lr=self.hparams.lr,
+            weight_decay=self.hparams.weight_decay,
         )
