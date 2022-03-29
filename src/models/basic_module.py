@@ -18,7 +18,7 @@ class BasicLitModule(LightningModule):
 
     def __init__(
         self,
-        net: torch.nn.Module,
+        temporal_model: torch.nn.Module,
         optim: str = "Adam",
         lr: float = 0.001,
         weight_decay: float = 0.0005,
@@ -26,7 +26,6 @@ class BasicLitModule(LightningModule):
         # DONE(? TODO add the needed variable to the basic.yaml and write in here
         # you could check the https://hydra.cc/docs/advanced/instantiate_objects/overview/ for how it's work
         use_timm: bool = False,
-        temporal_model: object = {},
         mlp: object = {},
     ):
         super().__init__()
@@ -39,13 +38,6 @@ class BasicLitModule(LightningModule):
         # this line allows to access init params with 'self.hparams' attribute
         # it also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
-
-        self.optim = optim
-        self.lr = lr
-        self.weight_decay = weight_decay
-        self.task = task
-        self.net = net
-
 
 
         # TODO: set up ResNet and LSTM, the following structure is a easy guide to implement
@@ -121,7 +113,7 @@ class BasicLitModule(LightningModule):
 
         # TODO: finish the step part and choose the proper loss function for multi-classification
         
-        x, y = batch["image"], batch[self.task]
+        x, y = batch["image"], batch[self.hparams.task]
         logits = self.forward(x)
         loss = self.criterion(logits, y)
         preds = torch.argmax(logits, dim=1)
@@ -191,6 +183,6 @@ class BasicLitModule(LightningModule):
 
         return getattr(torch.optim, self.optim)(
             params = self.parameters(), 
-            lr = self.lr,
-            weight_decay = self.weight_decay,
+            lr = self.hparams.lr,
+            weight_decay = self.hparams.weight_decay,
         )

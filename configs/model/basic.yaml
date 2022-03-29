@@ -1,21 +1,16 @@
-model:
-  _target_: src.models.basic_module.BasicLitModule
-  optim: Adam
-  lr: 0.001
-  weight_decay: 0.0005
-  task: tool
-  use_timm: True
+_target_: src.models.basic_module.BasicLitModule
+optim: Adam
+lr: 0.001
+weight_decay: 0.0005
+task: tool
+use_timm: True
 
-  temporal_model:
-    _target_: src.models.components.simple_LSTM.SimpleLSTM
-    input_size: 8
-    hidden_size: 12
-    num_layers: 1
+mlp:
+  input_size: 256
+  output_size: 128
 
-  mlp:
-    _target_: src.models.basic_module.mlp
-    input_size: 256
-    output_size: 128
-
-# TODO trainer ?
-# trainer:
+temporal_model:
+  _target_: src.models.components.simple_LSTM.SimpleLSTM
+  input_size: 8
+  hidden_size: 12
+  num_layers: 1
