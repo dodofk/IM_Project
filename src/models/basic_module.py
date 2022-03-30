@@ -1,7 +1,7 @@
 from typing import Any, List, Dict
 from webbrowser import get
 
-import time
+import timm
 import torch
 import torch.nn as nn
 from pytorch_lightning import LightningModule
@@ -59,7 +59,7 @@ class BasicLitModule(LightningModule):
 
         # todo: whether use the timm library or torch hub to load pretrained backbone model
         # should set a use_timm = true or false to determine
-        self.feature_extractor = ...
+        self.feature_extractor = timm.create_model('mobilenetv3_large_100',  use_timm = True, pretrained=True)
 
         # todo: not sure what name to use 
         # load the LSTM or other rnn based model it could be determine by config files
