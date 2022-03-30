@@ -2,15 +2,14 @@ _target_: src.models.basic_module.BasicLitModule
 optim: Adam
 lr: 0.001
 weight_decay: 0.0005
-task: tool
+task: phase
 use_timm: True
 
 mlp:
-  input_size: 128
-  output_size: 128
+  hidden_size: 1024
 
-temporal_model:
-  _target_: src.models.components.simple_LSTM.SimpleLSTM
-  input_size: 1000
-  hidden_size: 64
-  num_layers: 1
+temporal_cfg:
+  type: #GRU LSTM or leave it blank
+  hidden_size: 1024
+  num_layers: 3
+  bidirectional: True

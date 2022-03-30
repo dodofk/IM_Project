@@ -3,7 +3,7 @@
 # specify here default evaluation configuration
 defaults:
   - _self_
-  - datamodule: mnist.yaml # choose the datamodule for evaluation
+  - datamodule: heichole.yaml # choose the datamodule for evaluation
   - model: base.yaml
   - callbacks: null
   - logger: null
