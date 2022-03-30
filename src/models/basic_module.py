@@ -165,7 +165,7 @@ class BasicLitModule(LightningModule):
     def on_epoch_end(self):
         # reset metrics at the end of every epoch
         self.train_f1.reset()
-        self.test_f1.reset()
+        self.val_f1.reset()
 
     def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your optimization.
