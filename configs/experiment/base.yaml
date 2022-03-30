@@ -7,7 +7,7 @@ defaults:
   - override /datamodule: heichole.yaml
   - override /model: basic.yaml
   - override /callbacks: default.yaml
-  - override /logger: wandb.yaml
+  - override /logger: tensorboard.yaml
   - override /trainer: default.yaml
 
 # all parameters below will be merged with parameters from default configurations set above

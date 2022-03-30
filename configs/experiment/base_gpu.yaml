@@ -28,7 +28,7 @@ model:
   lr: 0.001
 
 datamodule:
-  batch_size: 64
+  batch_size: 128
 
 
 logger:
