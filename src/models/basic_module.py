@@ -1,7 +1,7 @@
 from typing import Any, List, Dict
 from webbrowser import get
 
-import timm
+import time
 import torch
 import torch.nn as nn
 from pytorch_lightning import LightningModule
@@ -22,16 +22,30 @@ class BasicLitModule(LightningModule):
         lr: float = 0.001,
         weight_decay: float = 0.0005,
         task: str = "tool",
+        
+        input_size:int,
+        hidden_size:int,
+        num_classes:int
         # todo add the needed variable to the basic.yaml and write in here
         # you could check the https://hydra.cc/docs/advanced/instantiate_objects/overview/ for how it's work
     ):
         super().__init__()
-
+        self.relu = nn.ReLU()
         '''
         First implement two model which could handle tool detection or action detection, and could be choose 
         by basic.yaml config about task (self.hparams.task)
         '''
-
+        # define first layer
+        self.l1 = nn.Linear(input_size, hidden_size)
+        # activation function
+        self.relu = nn.ReLU()
+        # define second layer
+        self.l2 = nn.Linear(hidden_size, num_classes)
+        self.net = net
+        self.optim = optim
+        self.lr = lr
+        self.weight_decay = weight_decay
+        self.task = task
         # this line allows to access init params with 'self.hparams' attribute
         # it also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
@@ -79,8 +93,8 @@ class BasicLitModule(LightningModule):
 
         # x = self.net(x)
         # return x
-
-        raise NotImplementedError
+        embedding = self.encoder(x)
+        return embedding
 
     def step(self, batch: Any):
         '''
