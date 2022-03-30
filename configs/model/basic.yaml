@@ -6,7 +6,7 @@ task: phase
 use_timm: True
 
 mlp:
-  hidden_size: 1024
+  hidden_size: 512
 
 temporal_cfg:
   type: #GRU LSTM or leave it blank
