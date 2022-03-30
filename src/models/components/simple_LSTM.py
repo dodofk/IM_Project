@@ -1,5 +1,6 @@
 from torch import nn
 
+
 class SimpleLSTM(nn.Module):
     def __init__ (
         self,
@@ -12,5 +13,6 @@ class SimpleLSTM(nn.Module):
         self.model = nn.Sequential(
             nn.LSTM(input_size, hidden_size, num_layers, bidirectional=True),
         )
+
     def forward (self, x): 
         return self.model(x)
