@@ -1,12 +1,6 @@
 from typing import Any, List, Dict
-<<<<<<< HEAD
 from omegaconf import DictConfig
 import timm
-=======
-from webbrowser import get
-
-import time
->>>>>>> 8008806f86bd727feeaf9ed8079f0f3a56d545e3
 import torch
 import torch.nn as nn
 from pytorch_lightning import LightningModule
@@ -23,7 +17,6 @@ class BasicLitModule(LightningModule):
         lr: float = 0.001,
         weight_decay: float = 0.0005,
         task: str = "tool",
-<<<<<<< HEAD
         use_timm: bool = False,
     ):
         super().__init__()
@@ -33,32 +26,6 @@ class BasicLitModule(LightningModule):
         by basic.yaml config about task (self.hparams.task)
         """
 
-=======
-        
-        input_size:int,
-        hidden_size:int,
-        num_classes:int
-        # todo add the needed variable to the basic.yaml and write in here
-        # you could check the https://hydra.cc/docs/advanced/instantiate_objects/overview/ for how it's work
-    ):
-        super().__init__()
-        self.relu = nn.ReLU()
-        '''
-        First implement two model which could handle tool detection or action detection, and could be choose 
-        by basic.yaml config about task (self.hparams.task)
-        '''
-        # define first layer
-        self.l1 = nn.Linear(input_size, hidden_size)
-        # activation function
-        self.relu = nn.ReLU()
-        # define second layer
-        self.l2 = nn.Linear(hidden_size, num_classes)
-        self.net = net
-        self.optim = optim
-        self.lr = lr
-        self.weight_decay = weight_decay
-        self.task = task
->>>>>>> 8008806f86bd727feeaf9ed8079f0f3a56d545e3
         # this line allows to access init params with 'self.hparams' attribute
         # it also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
@@ -121,7 +88,6 @@ class BasicLitModule(LightningModule):
 
     def forward(self, x):
 
-<<<<<<< HEAD
         x = self.feature_extractor(x)
 
         if self.hparams.temporal_cfg.type is not None:
@@ -129,12 +95,6 @@ class BasicLitModule(LightningModule):
         x = self.mlp(x)
 
         return x
-=======
-        # x = self.net(x)
-        # return x
-        embedding = self.encoder(x)
-        return embedding
->>>>>>> 8008806f86bd727feeaf9ed8079f0f3a56d545e3
 
     def step(self, batch: Any):
         """
