@@ -5,7 +5,7 @@
 
 defaults:
   - override /datamodule: heichole.yaml
-  - override /model: basic.yaml
+  - override /model: baseline.yaml
   - override /callbacks: default.yaml
   - override /logger: tensorboard.yaml
   - override /trainer: default.yaml
@@ -28,7 +28,8 @@ model:
   lr: 0.001
 
 datamodule:
-  batch_size: 64
+  batch_size: 16
+  seq_len: 1
 
 
 logger:
