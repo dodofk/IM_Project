@@ -1,5 +1,6 @@
 # data process
 pandas
+numpy
 
 # --------- pytorch --------- #
 torch>=1.10.0
