@@ -60,6 +60,8 @@ class BasicLitModule(LightningModule):
         # todo: whether use the timm library or torch hub to load pretrained backbone model
         # should set a use_timm = true or false to determine
         self.feature_extractor = timm.create_model('mobilenetv3_large_100',  use_timm = True, pretrained=True)
+    
+        test= 1
 
         # todo: not sure what name to use 
         # load the LSTM or other rnn based model it could be determine by config files
