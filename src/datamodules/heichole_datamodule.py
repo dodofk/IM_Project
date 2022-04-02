@@ -12,6 +12,8 @@ class HeiCholeDataModule(LightningDataModule):
         batch_size: int = 64,
         num_workers: int = 0,
         pin_memory: bool = False,
+        seq_len: int = 8,
+        channels: int = 3,
     ):
         super().__init__()
 
@@ -25,6 +27,8 @@ class HeiCholeDataModule(LightningDataModule):
             pin_memory=self.hparams.pin_memory,
             split="train",
             data_dir=self.hparams.data_dir,
+            seq_len=self.hparams.seq_len,
+            channels=self.hparams.channels,
         )
 
     def val_dataloader(self) -> DataLoader:
@@ -34,6 +38,8 @@ class HeiCholeDataModule(LightningDataModule):
             pin_memory=self.hparams.pin_memory,
             split="dev",
             data_dir=self.hparams.data_dir,
+            seq_len=self.hparams.seq_len,
+            channels=self.hparams.channels,
         )
 
     def test_dataloader(self) -> DataLoader:

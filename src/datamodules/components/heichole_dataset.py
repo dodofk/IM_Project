@@ -1,6 +1,7 @@
 from typing import List, Dict, Tuple
 import os
 
+import numpy as np
 import pandas as pd
 
 import torch
@@ -12,18 +13,25 @@ from torchvision import transforms
 import hydra
 from hydra.utils import get_original_cwd
 
+from numpy.random import default_rng
 
-# todo: support for sequence data
+
 class HeiCholeDataset(Dataset):
     def __init__(
         self,
         data_dir: str = "data/HeiChole_data",
         split: str = "train",
+        seq_len: int = 8,
+        channels: int = 3,
+        np_random_seed: int = 12345,
     ) -> None:
 
         assert split in ["train", "dev"], "Invalid split"
 
         self.data_dir = data_dir
+        self.seq_len = seq_len
+        self.channels = channels
+        self.np_random_seed = np_random_seed
 
         self.df = pd.read_csv(
             os.path.join(
@@ -42,21 +50,36 @@ class HeiCholeDataset(Dataset):
 
     def __getitem__(self, index) -> Dict:
         df_row = self.df.iloc[index]
-
-        image = Image.open(
-            os.path.join(
-                get_original_cwd(),
-                self.data_dir,
-                f"HeiChole_{df_row['video_id']}",
-                f"{df_row['image_id']}.jpg",
-            )
-        )
-
-        image = self.transform(image)
         phase = df_row["phase"]
+        video_id = df_row["video_id"]
+        image_id = df_row["image_id"]
+
+        rng = default_rng(self.np_random_seed)
+
+        if image_id< self.seq_len:
+            numbers = rng.choice(list(range(1, image_id+1)), size=self.seq_len-1, replace=True)
+            numbers.sort()
+        else:
+            numbers = rng.choice(list(range(1, image_id)), size=self.seq_len-1, replace=False)
+            numbers.sort()
+
+        numbers = np.append(numbers, image_id)
+        frames = torch.FloatTensor(self.seq_len, self.channels, 224, 224)
+
+        for i, _image_id in enumerate(numbers):
+            image = Image.open(
+                os.path.join(
+                    get_original_cwd(),
+                    self.data_dir,
+                    f"HeiChole_{video_id}",
+                    f"{_image_id}.jpg",
+                )
+            )
+            image = self.transform(image)
+            frames[i, :, :, :] = image.to(torch.float)
 
         return {
-            "image": image,
+            "image": torch.squeeze(frames, dim=0),
             "phase": phase,
         }
 
@@ -81,12 +104,16 @@ def build_heichole_dataloader(
     pin_memory: bool,
     split: str,
     data_dir: str,
+    seq_len: int,
+    channels: int,
 ) -> DataLoader:
     assert split in ["train", "dev"], "Invalid Split"
 
     dataset = HeiCholeDataset(
         split=split,
         data_dir=data_dir,
+        seq_len=seq_len,
+        channels=channels,
     )
 
     return DataLoader(
