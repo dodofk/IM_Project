@@ -4,7 +4,7 @@
 defaults:
   - _self_
   - datamodule: heichole.yaml # choose the datamodule for evaluation
-  - model: base.yaml
+  - model: baseline.yaml
   - callbacks: null
   - logger: null
   - trainer: default.yaml
