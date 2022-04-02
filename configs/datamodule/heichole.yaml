@@ -4,3 +4,6 @@ data_dir: ${data_dir} # data_dir is specified in config.yaml
 batch_size: 64
 num_workers: 0
 pin_memory: False
+
+seq_len: 8
+channels: 3
