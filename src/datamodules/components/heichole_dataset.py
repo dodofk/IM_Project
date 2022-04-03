@@ -72,7 +72,7 @@ class HeiCholeDataset(Dataset):
                     get_original_cwd(),
                     self.data_dir,
                     f"HeiChole_{video_id}",
-                    f"{_image_id}.jpg",
+                    f"{int(_image_id)}.jpg",
                 )
             )
             image = self.transform(image)
