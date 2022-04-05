@@ -4,6 +4,7 @@ import timm
 import torch
 import torch.nn as nn
 from src.models.basic_module import BaseClassificationModele
+from torchmetrics.classification import ConfusionMatrix
 
 
 # todo: add statscore to compute when validation
@@ -30,6 +31,10 @@ class ResnetTSModule(BaseClassificationModele):
         # this line allows to access init params with 'self.hparams' attribute
         # it also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
+
+        self.val_confusion_matrix = ConfusionMatrix(
+            num_classes=self.num_class(),
+        )
 
         self.feature_extractor = timm.create_model(
             backbone_model,

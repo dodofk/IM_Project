@@ -17,23 +17,13 @@ class BaseClassificationModele(LightningModule):
 
         # for logging best so far validation accuracy
         self.val_f1_best = MaxMetric()
-        self.val_confusion_matrix = ConfusionMatrix(
-            num_classes=self.num_class(),
-        )
+        self.val_confusion_matrix = None
 
     def forward(self, *args, **kwargs):
         raise NotImplementedError
 
     def step(self, *args, **kwargs):
         raise NotImplementedError
-
-    def num_class(self):
-        task_class = {
-            "tool": 7,
-            "phase": 7,
-            "action": 4,
-        }
-        return task_class.get(self.hparams.task)
 
     def training_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.step(batch)
