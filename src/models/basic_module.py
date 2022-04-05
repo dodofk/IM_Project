@@ -35,7 +35,9 @@ class BaseClassificationModele(LightningModule):
         f1_macro = self.train_f1_macro(preds, targets)
         self.log("train/loss", loss, on_step=True, on_epoch=True, prog_bar=False)
         # self.log("train/f1", f1, on_step=False, on_epoch=False, prog_bar=True)
-        self.log("train/f1_macro", f1_macro, on_step=True, on_epoch=True, prog_bar=False)
+        self.log(
+            "train/f1_macro", f1_macro, on_step=True, on_epoch=True, prog_bar=False
+        )
 
         # we can return here dict with any tensors
         # and then read it in some callback or in `training_epoch_end()`` below
@@ -54,8 +56,7 @@ class BaseClassificationModele(LightningModule):
         f1_macro = self.val_f1_macro(preds, targets)
         self.val_confusion_matrix(preds, targets)
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=False)
-        self.log("val/f1", f1, on_step=False, on_epoch=False, prog_bar=False)
-        self.lolg("val/f1_macro", f1_macro, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/f1_macro", f1_macro, on_step=False, on_epoch=True, prog_bar=True)
 
         return {"loss": loss, "preds": preds, "targets": targets}
 
@@ -63,7 +64,10 @@ class BaseClassificationModele(LightningModule):
         f1 = self.val_f1_macro.compute()  # get val accuracy from current epoch
         self.val_f1_best.update(f1)
         self.log(
-            "val/f1_best_macro", self.val_f1_best.compute(), on_epoch=True, prog_bar=True
+            "val/f1_best_macro",
+            self.val_f1_best.compute(),
+            on_epoch=True,
+            prog_bar=True,
         )
         print("val f1: ", self.val_f1.compute())
         print("train f1: ", self.train_f1.compute())
