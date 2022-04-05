@@ -12,8 +12,8 @@ class BaseClassificationModele(LightningModule):
 
     def __init__(self):
         super().__init__()
-        self.train_f1 = F1Score()
-        self.val_f1 = F1Score()
+        self.train_f1 = None
+        self.val_f1 = None
 
         # for logging best so far validation accuracy
         self.val_f1_best = MaxMetric()

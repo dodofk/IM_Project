@@ -4,6 +4,7 @@ import timm
 import torch
 import torch.nn as nn
 from src.models.basic_module import BaseClassificationModele
+from torchmetrics import F1Score
 from torchmetrics.classification import ConfusionMatrix
 
 
@@ -32,6 +33,14 @@ class ResnetTSModule(BaseClassificationModele):
         # it also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
 
+        self.train_f1 = F1Score(
+            num_classes=self.num_class(),
+            average="none",
+        )
+        self.val_f1 = F1Score(
+            num_classes=self.num_class(),
+            average="none",
+        )
         self.val_confusion_matrix = ConfusionMatrix(
             num_classes=self.num_class(),
         )
