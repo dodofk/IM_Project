@@ -4,8 +4,11 @@ import timm
 import torch
 import torch.nn as nn
 from src.models.basic_module import BaseClassificationModele
+from torchmetrics.classification import StatScores
 
 
+# todo: add statscore to compute when validation
+# therefore could easily draw the coffusion matrix
 class ResnetTSModule(BaseClassificationModele):
     def __init__(
         self,
@@ -80,14 +83,21 @@ class ResnetTSModule(BaseClassificationModele):
         else:
             return 2
 
-    def frames_feature_extractor(self, x):
-        output = torch.zeros([x.shape[0], x.shape[1], self.feature_extractor.num_features])
+    # this will cause error, since output is on cpu, need to fix it
+    def frames_feature_extractor(
+            self,
+            x: torch.Tensor,
+            output: torch.Tensor,
+    ):
+        # output = torch.zeros([x.shape[0], x.shape[1], self.feature_extractor.num_features])
         for i in range(0, x.shape[1]):
             output[:, i, :] = self.feature_extractor(x[:, i, :, :, :])
         return output
 
     def forward(self, x):
-        x = self.frames_feature_extractor(x)
+        print("In forward check device", x.get_device())
+        output_tensor = torch.zeros([x.shape[0], x.shape[1], self.feature_extractor.num_features])
+        x = self.frames_feature_extractor(x, output_tensor)
 
         if self.hparams.temporal_cfg.type in ["LSTM", "GRU", "RNN"]:
             x, _ = self.temporal_model(x)
@@ -116,6 +126,7 @@ class ResnetTSModule(BaseClassificationModele):
         y: correspond to the task it should be action or tool
         """
         # TODO: finish the step part and choose the proper loss function for multi-classification
+        print("In step check device", batch["image"].get_device())
         logits = self.forward(batch["image"])
         loss = self.criterion(logits, batch[self.hparams.task])
         preds = torch.argmax(logits, dim=-1)
