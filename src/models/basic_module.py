@@ -28,7 +28,12 @@ class BaseClassificationModele(LightningModule):
         raise NotImplementedError
 
     def num_class(self):
-        raise NotImplementedError
+        task_class = {
+            "tool": 7,
+            "phase": 7,
+            "action": 4,
+        }
+        return task_class.get(self.hparams.task)
 
     def training_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.step(batch)
