@@ -4,12 +4,14 @@ import timm
 import torch
 import torch.nn as nn
 from src.models.basic_module import BaseClassificationModele
+from hydra.utils import instantiate
 
 
 class BaselineModule(BaseClassificationModele):
     def __init__(
             self,
             mlp: DictConfig,
+            temporal_model: DictConfig,
             optim: str = "Adam",
             lr: float = 0.001,
             weight_decay: float = 0.0005,
@@ -28,12 +30,16 @@ class BaselineModule(BaseClassificationModele):
         # it also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
 
+
+
         self.feature_extractor = timm.create_model(
             backbone_model,
             pretrained=use_timm,
             in_chans=3,
             num_classes=0,
         )
+
+        self.temporal_model = instantiate(temporal_model)
 
         self.mlp = nn.Sequential(
             nn.Linear(
@@ -60,6 +66,7 @@ class BaselineModule(BaseClassificationModele):
 
     def forward(self, x):
         x = self.feature_extractor(x)
+        x = self.temporal_model(x)
         x = self.mlp(x)
         return x
 

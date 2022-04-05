@@ -8,3 +8,10 @@ backbone_model: resnet34
 
 mlp:
   hidden_size: 512
+
+temporal_model:
+  _target_: src.models.components.tcn.TemporalConvNet
+  num_inputs: 1000
+  num_channels: 20
+  kernel_size: 2
+  dropout: 0.2
