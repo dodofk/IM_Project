@@ -4,7 +4,6 @@ import timm
 import torch
 import torch.nn as nn
 from src.models.basic_module import BaseClassificationModele
-from torchmetrics.classification import StatScores
 
 
 # todo: add statscore to compute when validation
@@ -83,7 +82,8 @@ class ResnetTSModule(BaseClassificationModele):
         else:
             return 2
 
-    # this will cause error, since output is on cpu, need to fix it
+    # didn't fine a proper way to solve the prolem, could only training on cuda now
+    # todo: solve deivce error
     def frames_feature_extractor(
             self,
             x: torch.Tensor,
@@ -92,10 +92,9 @@ class ResnetTSModule(BaseClassificationModele):
         # output = torch.zeros([x.shape[0], x.shape[1], self.feature_extractor.num_features])
         for i in range(0, x.shape[1]):
             output[:, i, :] = self.feature_extractor(x[:, i, :, :, :])
-        return output
+        return output.to("cuda")
 
     def forward(self, x):
-        print("In forward check device", x.get_device())
         output_tensor = torch.zeros([x.shape[0], x.shape[1], self.feature_extractor.num_features])
         x = self.frames_feature_extractor(x, output_tensor)
 
@@ -126,7 +125,6 @@ class ResnetTSModule(BaseClassificationModele):
         y: correspond to the task it should be action or tool
         """
         # TODO: finish the step part and choose the proper loss function for multi-classification
-        print("In step check device", batch["image"].get_device())
         logits = self.forward(batch["image"])
         loss = self.criterion(logits, batch[self.hparams.task])
         preds = torch.argmax(logits, dim=-1)

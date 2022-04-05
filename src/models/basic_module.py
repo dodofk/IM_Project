@@ -2,6 +2,7 @@ from typing import Any, List, Dict
 from pytorch_lightning import LightningModule
 from torchmetrics import MaxMetric
 from torchmetrics import F1Score
+from torchmetrics.classification import ConfusionMatrix
 
 
 class BaseClassificationModele(LightningModule):
@@ -16,11 +17,17 @@ class BaseClassificationModele(LightningModule):
 
         # for logging best so far validation accuracy
         self.val_f1_best = MaxMetric()
+        self.val_confusion_matrix = ConfusionMatrix(
+            num_classes=self.num_class(),
+        )
 
     def forward(self, *args, **kwargs):
         raise NotImplementedError
 
     def step(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def num_class(self):
         raise NotImplementedError
 
     def training_step(self, batch: Any, batch_idx: int):
@@ -44,9 +51,10 @@ class BaseClassificationModele(LightningModule):
         loss, preds, targets = self.step(batch)
 
         # log val metrics
-        acc = self.val_f1(preds, targets)
+        f1 = self.val_f1(preds, targets)
+        self.val_confusion_matrix(preds, targets)
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=False)
-        self.log("val/f1", acc, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/f1", f1, on_step=False, on_epoch=True, prog_bar=True)
 
         return {"loss": loss, "preds": preds, "targets": targets}
 
@@ -56,6 +64,7 @@ class BaseClassificationModele(LightningModule):
         self.log(
             "val/f1_best", self.val_f1_best.compute(), on_epoch=True, prog_bar=True
         )
+        print("Confusion_matrix: ", self.val_confusion_matrix.compute())
 
     def test_step(self, batch: Any, batch_idx: int):
         raise NotImplementedError
@@ -67,3 +76,4 @@ class BaseClassificationModele(LightningModule):
         # reset metrics at the end of every epoch
         self.train_f1.reset()
         self.val_f1.reset()
+        self.val_confusion_matrix.reset()
