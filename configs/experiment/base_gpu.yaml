@@ -5,7 +5,7 @@
 
 defaults:
   - override /datamodule: heichole.yaml
-  - override /model: basic.yaml
+  - override /model: baseline.yaml
   - override /callbacks: default.yaml
   - override /logger: wandb.yaml
   - override /trainer: default.yaml
