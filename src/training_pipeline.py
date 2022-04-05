@@ -83,7 +83,7 @@ def train(config: DictConfig) -> Optional[float]:
     # Train the model
     if config.get("tune"):
         log.info("Starting tuning")
-        trainer.tune(model=model)
+        trainer.tune(model=model, datamodule=datamodule)
 
     if config.get("train"):
         log.info("Starting training!")
