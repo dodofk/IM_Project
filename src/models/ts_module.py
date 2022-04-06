@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 from src.models.basic_module import BaseClassificationModele
 from torchmetrics.classification import StatScores
+from src.models.components.tcn import TemporalConvNet as TCN
 
 
 # todo: add statscore to compute when validation
@@ -47,19 +48,31 @@ class ResnetTSModule(BaseClassificationModele):
                 bidirectional=temporal_cfg.bidirectional,
                 batch_first=True,
             )
+            self.mlp = nn.Sequential(
+                nn.Linear(
+                    temporal_cfg.hidden_size * self.temporal_direction(),
+                    self.num_class(),
+                ),
+                # should permute if want to use batch norm
+                # nn.BatchNorm1d(mlp.hidden_size),
+                # nn.ReLU(),
+                # nn.Linear(mlp.hidden_size, self.num_class()),
+            )
         elif temporal_cfg.type in ["TCN"]:
-            raise NotImplementedError
+            self.temporal_model = TCN(
+                num_inputs = temporal_cfg.num_inputs,
+                num_channels = temporal_cfg.num_channels, #[temporal_cfg.num_channels] * 2,
+                kernel_size = temporal_cfg.kernel_size,
+                dropout = temporal_cfg.dropout,
+            )
+            self.mlp = nn.Sequential(
+                nn.Linear(
+                    temporal_cfg.num_channels[-1],
+                    self.num_class(),
+                ),
+            )
 
-        self.mlp = nn.Sequential(
-            nn.Linear(
-                temporal_cfg.hidden_size * self.temporal_direction(),
-                self.num_class(),
-            ),
-            # should permute if want to use batch norm
-            # nn.BatchNorm1d(mlp.hidden_size),
-            # nn.ReLU(),
-            # nn.Linear(mlp.hidden_size, self.num_class()),
-        )
+        
 
         if task in ["phase"]:
             self.criterion = torch.nn.CrossEntropyLoss()
@@ -95,14 +108,18 @@ class ResnetTSModule(BaseClassificationModele):
         return output
 
     def forward(self, x):
-        print("In forward check device", x.get_device())
         output_tensor = torch.zeros([x.shape[0], x.shape[1], self.feature_extractor.num_features])
         x = self.frames_feature_extractor(x, output_tensor)
 
         if self.hparams.temporal_cfg.type in ["LSTM", "GRU", "RNN"]:
             x, _ = self.temporal_model(x)
             x = x[:, -1, :]
-
+        elif self.hparams.temporal_cfg.type in ["TCN"]:
+            x = x.transpose(1, 2)
+            x = self.temporal_model(x)
+            x = x.transpose(1, 2)
+            x = x[:, -1, :]
+        
         x = self.mlp(x)
 
         return x
@@ -126,7 +143,6 @@ class ResnetTSModule(BaseClassificationModele):
         y: correspond to the task it should be action or tool
         """
         # TODO: finish the step part and choose the proper loss function for multi-classification
-        print("In step check device", batch["image"].get_device())
         logits = self.forward(batch["image"])
         loss = self.criterion(logits, batch[self.hparams.task])
         preds = torch.argmax(logits, dim=-1)
