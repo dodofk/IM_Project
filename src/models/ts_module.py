@@ -4,8 +4,9 @@ import timm
 import torch
 import torch.nn as nn
 from src.models.basic_module import BaseClassificationModele
-from torchmetrics.classification import StatScores
 from src.models.components.tcn import TemporalConvNet as TCN
+from torchmetrics import F1Score
+from torchmetrics.classification import ConfusionMatrix
 
 
 # todo: add statscore to compute when validation
@@ -32,6 +33,26 @@ class ResnetTSModule(BaseClassificationModele):
         # this line allows to access init params with 'self.hparams' attribute
         # it also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
+
+        self.train_f1 = F1Score(
+            num_classes=self.num_class(),
+            average="none",
+        )
+        self.val_f1 = F1Score(
+            num_classes=self.num_class(),
+            average="none",
+        )
+        self.train_f1_macro = F1Score(
+            num_classes=self.num_class(),
+            average="macro",
+        )
+        self.val_f1_macro = F1Score(
+            num_classes=self.num_class(),
+            average="macro",
+        )
+        self.val_confusion_matrix = ConfusionMatrix(
+            num_classes=self.num_class(),
+        )
 
         self.feature_extractor = timm.create_model(
             backbone_model,
@@ -96,7 +117,8 @@ class ResnetTSModule(BaseClassificationModele):
         else:
             return 2
 
-    # this will cause error, since output is on cpu, need to fix it
+    # didn't fine a proper way to solve the prolem, could only training on cuda now
+    # todo: solve deivce error
     def frames_feature_extractor(
             self,
             x: torch.Tensor,
@@ -105,7 +127,7 @@ class ResnetTSModule(BaseClassificationModele):
         # output = torch.zeros([x.shape[0], x.shape[1], self.feature_extractor.num_features])
         for i in range(0, x.shape[1]):
             output[:, i, :] = self.feature_extractor(x[:, i, :, :, :])
-        return output
+        return output.to("cuda")
 
     def forward(self, x):
         output_tensor = torch.zeros([x.shape[0], x.shape[1], self.feature_extractor.num_features])

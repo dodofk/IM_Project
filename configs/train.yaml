@@ -15,7 +15,7 @@ defaults:
   - experiment: null
 
   # debugging config (enable through command line, e.g. `python train.py debug=default)
-  - debug: default
+  - debug: null
 
   # config for hyperparameter optimization
   - hparams_search: null
@@ -44,6 +44,9 @@ ignore_warnings: True
 
 # set False to skip model training
 train: True
+
+# set False to skip tuning
+tune: False
 
 # evaluate on test set, using best model weights achieved during training
 # lightning chooses best weights based on the metric specified in checkpoint callback

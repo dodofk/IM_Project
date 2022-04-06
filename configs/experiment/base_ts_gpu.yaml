@@ -21,18 +21,23 @@ seed: 12345
 trainer:
   min_epochs: 10
   max_epochs: 50
-  gradient_clip_val: 0.3
+  gradient_clip_val: 0.5
   gpus: 1
   accelerator: gpu
   precision: 16
   accumulate_grad_batches: 2
+  auto_lr_find: True
 
 model:
   lr: 0.001
+  weight_decay: 0.01
+  temporal_cfg:
+    hidden_size: 512
+    num_layers: 4
 
 datamodule:
-  batch_size: 8
-  seq_len: 8
+  batch_size: 32
+  seq_len: 12
 
 
 logger:

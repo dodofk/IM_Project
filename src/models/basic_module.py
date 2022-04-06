@@ -2,6 +2,7 @@ from typing import Any, List, Dict
 from pytorch_lightning import LightningModule
 from torchmetrics import MaxMetric
 from torchmetrics import F1Score
+from torchmetrics.classification import ConfusionMatrix
 
 
 class BaseClassificationModele(LightningModule):
@@ -11,11 +12,14 @@ class BaseClassificationModele(LightningModule):
 
     def __init__(self):
         super().__init__()
-        self.train_f1 = F1Score()
-        self.val_f1 = F1Score()
+        self.train_f1 = None
+        self.train_f1_macro = None
+        self.val_f1 = None
+        self.val_f1_macro = None
 
         # for logging best so far validation accuracy
         self.val_f1_best = MaxMetric()
+        self.val_confusion_matrix = None
 
     def forward(self, *args, **kwargs):
         raise NotImplementedError
@@ -28,8 +32,12 @@ class BaseClassificationModele(LightningModule):
 
         # log train metrics
         f1 = self.train_f1(preds, targets)
+        f1_macro = self.train_f1_macro(preds, targets)
         self.log("train/loss", loss, on_step=True, on_epoch=True, prog_bar=False)
-        self.log("train/f1", f1, on_step=True, on_epoch=True, prog_bar=True)
+        # self.log("train/f1", f1, on_step=False, on_epoch=False, prog_bar=True)
+        self.log(
+            "train/f1_macro", f1_macro, on_step=True, on_epoch=True, prog_bar=False
+        )
 
         # we can return here dict with any tensors
         # and then read it in some callback or in `training_epoch_end()`` below
@@ -44,18 +52,26 @@ class BaseClassificationModele(LightningModule):
         loss, preds, targets = self.step(batch)
 
         # log val metrics
-        acc = self.val_f1(preds, targets)
+        f1 = self.val_f1(preds, targets)
+        f1_macro = self.val_f1_macro(preds, targets)
+        self.val_confusion_matrix(preds, targets)
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=False)
-        self.log("val/f1", acc, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/f1_macro", f1_macro, on_step=False, on_epoch=True, prog_bar=True)
 
         return {"loss": loss, "preds": preds, "targets": targets}
 
     def validation_epoch_end(self, outputs: List[Any]):
-        f1 = self.val_f1.compute()  # get val accuracy from current epoch
+        f1 = self.val_f1_macro.compute()  # get val accuracy from current epoch
         self.val_f1_best.update(f1)
         self.log(
-            "val/f1_best", self.val_f1_best.compute(), on_epoch=True, prog_bar=True
+            "val/f1_best_macro",
+            self.val_f1_best.compute(),
+            on_epoch=True,
+            prog_bar=True,
         )
+        print("val f1: ", self.val_f1.compute())
+        print("train f1: ", self.train_f1.compute())
+        print("Confusion_matrix: ", self.val_confusion_matrix.compute())
 
     def test_step(self, batch: Any, batch_idx: int):
         raise NotImplementedError
@@ -66,4 +82,7 @@ class BaseClassificationModele(LightningModule):
     def on_epoch_end(self):
         # reset metrics at the end of every epoch
         self.train_f1.reset()
+        self.train_f1_macro.reset()
         self.val_f1.reset()
+        self.val_f1_macro.reset()
+        self.val_confusion_matrix.reset()
