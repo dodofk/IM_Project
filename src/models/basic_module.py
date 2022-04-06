@@ -1,13 +1,13 @@
 from typing import Any, List, Dict
 from webbrowser import get
-
+from omegaconf import DictConfig
 import timm
 import torch
 import torch.nn as nn
 from pytorch_lightning import LightningModule
 from torchmetrics import MaxMetric
 from torchmetrics.classification.accuracy import Accuracy
-
+from hydra.utils import instantiate
 
 class BasicLitModule(LightningModule):
     """
@@ -17,15 +17,18 @@ class BasicLitModule(LightningModule):
 
     def __init__(
         self,
+        temporal_cfg: DictConfig,
+        mlp: DictConfig,
+        num_classes: int,
         net: torch.nn.Module,
         optim: str = "Adam",
         lr: float = 0.001,
         weight_decay: float = 0.0005,
         task: str = "tool",
         
-        input_size:int,
-        hidden_size:int,
-        num_classes:int
+        # input_size:int,
+        # hidden_size:int,
+        
         # todo add the needed variable to the basic.yaml and write in here
         # you could check the https://hydra.cc/docs/advanced/instantiate_objects/overview/ for how it's work
     ):
@@ -35,12 +38,12 @@ class BasicLitModule(LightningModule):
         First implement two model which could handle tool detection or action detection, and could be choose 
         by basic.yaml config about task (self.hparams.task)
         '''
-        # define first layer
-        self.l1 = nn.Linear(input_size, hidden_size)
-        # activation function
-        self.relu = nn.ReLU()
-        # define second layer
-        self.l2 = nn.Linear(hidden_size, num_classes)
+        # # define first layer
+        # self.l1 = nn.Linear(input_size, hidden_size)
+        # # activation function
+        # self.relu = nn.ReLU()
+        # # define second layer
+        # self.l2 = nn.Linear(hidden_size, num_classes)
         self.net = net
         self.optim = optim
         self.lr = lr
@@ -57,20 +60,32 @@ class BasicLitModule(LightningModule):
         # easily change different model
 
 
+        self.LSTM = getattr(nn, temporal_cfg.type)(
+            input_size=self.feature_extractor.num_features,
+            hidden_size=temporal_cfg.hidden_size,
+            num_layers=temporal_cfg.num_layers,
+            bidirectional=temporal_cfg.bidirectional,
+            dropout=temporal_cfg.dropout,
+            batch_first=temporal_cfg.batch_first
+        )
         # todo: whether use the timm library or torch hub to load pretrained backbone model
         # should set a use_timm = true or false to determine
-        self.feature_extractor = timm.create_model('mobilenetv3_large_100',  use_timm = True, pretrained=True)
-    
-        test= 1
+        self.feature_extractor = timm.create_model('resnet34',  pretrained=True)
 
         # todo: not sure what name to use 
         # load the LSTM or other rnn based model it could be determine by config files
-        self.temporal_model = ...
-
+        
 
         # todo: set up the final linear or with some activation functions
         self.mlp = nn.Sequential(
-            ...
+            nn.Linear(
+                self.feature_extractor.num_features ,
+                mlp.hidden_size,
+            ),
+            nn.ReLU(True),
+            nn.Linear(mlp.hidden_size, self.num_class()
+            
+            ),
         )
 
         # todo: choose the proper loss function, since i remember CE is better
@@ -85,7 +100,13 @@ class BasicLitModule(LightningModule):
 
         # for logging best so far validation accuracy
         self.val_acc_best = MaxMetric()
-
+    def num_class(self):
+        task_class = {
+            "tool": 7,
+            "phase": 7,
+            "action": 4,
+        }
+        return task_class.get(self.hparams.task)
     def forward(self, x):
         '''
         return a tensor in size B * ? * (4 if task is action else 7)
@@ -93,10 +114,13 @@ class BasicLitModule(LightningModule):
         '''
         # todo: finish the foward part
 
-        # x = self.net(x)
+        x = self.feature_extractor(x)
         # return x
-        embedding = self.encoder(x)
-        return embedding
+        lstm_out, _ = self.lstm(x)
+        y_pred = self.linear(lstm_out[:,-1])
+        y_pred = self.mlp(y_pred)
+
+        return y_pred
 
     def step(self, batch: Any):
         '''
@@ -117,13 +141,11 @@ class BasicLitModule(LightningModule):
         '''
 
         # todo: finish the step part and choose the proper loss function for multi-classification
-        # x, y = batch
-        # logits = self.forward(x)
-        # loss = self.criterion(logits, y)
-        # preds = torch.argmax(logits, dim=1)
-        # return loss, preds, y
-
-        raise NotImplementedError
+        x, y = batch
+        logits = self.forward(x['image'])
+        loss = self.criterion(logits, y)
+        preds = torch.argmax(logits, dim=1)
+        return loss, preds, y
 
     def training_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.step(batch)

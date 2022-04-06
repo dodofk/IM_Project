@@ -3,12 +3,22 @@ optim: Adam
 lr: 0.001
 weight_decay: 0.0005
 task: tool
+mlp: 
+  hidden_size: 512
 
+temporal_cfg:
+  type: LSTM
+  hidden_size: 1024
+  num_layers: 3
+  bidirectional: True
+  dropout: 0.01
+  batch_first: True
 # to implement ??
-# net:
-#   _target_: src.models.components.simple_dense_net.SimpleDenseNet
-#   input_size: 784
-#   lin1_size: 256
-#   lin2_size: 256
-#   lin3_size: 256
-#   output_size: 10
+net:
+  _target_: src.models.components.simple_dense_net.SimpleDenseNet
+  input_size: 784
+  lin1_size: 256
+  lin2_size: 256
+  lin3_size: 256
+  output_size: 10
+
