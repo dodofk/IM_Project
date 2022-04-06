@@ -8,3 +8,4 @@ backbone_model: resnet34
 
 mlp:
   hidden_size: 512
+

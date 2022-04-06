@@ -12,6 +12,7 @@ class BaselineModule(BaseClassificationModele):
     def __init__(
             self,
             mlp: DictConfig,
+            # temporal_model: DictConfig,
             optim: str = "Adam",
             lr: float = 0.001,
             weight_decay: float = 0.0005,
@@ -57,6 +58,8 @@ class BaselineModule(BaseClassificationModele):
             num_classes=0,
         )
 
+        # self.temporal_model = instantiate(temporal_model)
+
         self.mlp = nn.Sequential(
             nn.Linear(
                 self.feature_extractor.num_features,
@@ -82,6 +85,7 @@ class BaselineModule(BaseClassificationModele):
 
     def forward(self, x):
         x = self.feature_extractor(x)
+        # x = self.temporal_model(x)
         x = self.mlp(x)
         return x
 
