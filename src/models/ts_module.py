@@ -30,6 +30,8 @@ class ResnetTSModule(BaseClassificationModele):
         by basic.yaml config about task (self.hparams.task)
         """
 
+
+
         # this line allows to access init params with 'self.hparams' attribute
         # it also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
@@ -92,8 +94,6 @@ class ResnetTSModule(BaseClassificationModele):
                     self.num_class(),
                 ),
             )
-
-        
 
         if task in ["phase"]:
             self.criterion = torch.nn.CrossEntropyLoss()
