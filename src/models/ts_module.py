@@ -79,20 +79,16 @@ class ResnetTSModule(BaseClassificationModele):
                 # nn.Linear(mlp.hidden_size, self.num_class()),
             )
         elif temporal_cfg.type in ["TCN"]:
-            model_conv_fc = nn.Linear(
+            self.model_conv_fc = nn.Linear(
                 self.feature_extractor.num_features,
                 temporal_cfg.spatial_feat_dim,
             )
             channel_sizes = [temporal_cfg.n_hid] * temporal_cfg.levels
-            temporal_model = TCN(
+            self.temporal_model = TCN(
                 num_inputs=temporal_cfg.spatial_feat_dim,
                 num_channels=channel_sizes,
                 kernel_size=temporal_cfg.kernel_size,
                 dropout=temporal_cfg.dropout,
-            )
-            self.temporal_model = nn.Sequential(
-                model_conv_fc,
-                temporal_model,
             )
             self.mlp = nn.Sequential(
                 nn.Linear(
@@ -143,6 +139,7 @@ class ResnetTSModule(BaseClassificationModele):
             x, _ = self.temporal_model(x)
             x = x[:, -1, :]
         elif self.hparams.temporal_cfg.type in ["TCN"]:
+            x = self.model_conv_fc(x)
             x = x.transpose(1, 2)
             x = self.temporal_model(x)
             x = x.transpose(1, 2)
