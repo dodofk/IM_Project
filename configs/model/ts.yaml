@@ -18,7 +18,7 @@ mlp:
 
 temporal_cfg:
   type: TCN
-  spatial_feature_dim: 32
+  spatial_feat_dim: 32
   nhid: 128
   kernel_size: 7
   dropout: 0.25
