@@ -29,9 +29,6 @@ class ResnetTSModule(BaseClassificationModele):
         First implement two model which could handle tool detection or action detection, and could be choose 
         by basic.yaml config about task (self.hparams.task)
         """
-
-
-
         # this line allows to access init params with 'self.hparams' attribute
         # it also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
@@ -82,15 +79,24 @@ class ResnetTSModule(BaseClassificationModele):
                 # nn.Linear(mlp.hidden_size, self.num_class()),
             )
         elif temporal_cfg.type in ["TCN"]:
-            self.temporal_model = TCN(
-                num_inputs = temporal_cfg.num_inputs,
-                num_channels = temporal_cfg.num_channels, #[temporal_cfg.num_channels] * 2,
-                kernel_size = temporal_cfg.kernel_size,
-                dropout = temporal_cfg.dropout,
+            model_conv_fc = nn.Linear(
+                self.feature_extractor.num_features,
+                temporal_cfg.spatial_feat_dim,
+            )
+            channel_sizes = [temporal_cfg.n_hid] * temporal_cfg.levels
+            temporal_model = TCN(
+                num_inputs=temporal_cfg.spatial_feat_dim,
+                num_channels=channel_sizes,
+                kernel_size=temporal_cfg.kernel_size,
+                dropout=temporal_cfg.dropout,
+            )
+            self.temporal_model = nn.Sequential(
+                model_conv_fc,
+                temporal_model,
             )
             self.mlp = nn.Sequential(
                 nn.Linear(
-                    temporal_cfg.num_channels[-1],
+                    channel_sizes[-1],
                     self.num_class(),
                 ),
             )

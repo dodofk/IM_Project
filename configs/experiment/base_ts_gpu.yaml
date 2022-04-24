@@ -31,9 +31,6 @@ trainer:
 model:
   lr: 0.001
   weight_decay: 0.01
-  temporal_cfg:
-    hidden_size: 512
-    num_layers: 4
 
 datamodule:
   batch_size: 32
