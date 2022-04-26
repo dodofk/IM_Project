@@ -25,7 +25,7 @@ trainer:
   gpus: 1
   accelerator: gpu
   precision: 16
-  accumulate_grad_batches: 2
+  accumulate_grad_batches: 4
   auto_lr_find: True
 
 model:
@@ -34,7 +34,7 @@ model:
 
 datamodule:
   batch_size: 32
-  seq_len: 4
+  seq_len: 16
 
 
 logger:
