@@ -31,6 +31,12 @@ trainer:
 model:
   lr: 0.001
   weight_decay: 0.01
+  backbone_model: vit_base_patch32_224
+
+  temporal_cfg:
+    spatial_feet_dim: 64
+    n_hid: 256
+    dropout: 0.1
 
 datamodule:
   batch_size: 32
