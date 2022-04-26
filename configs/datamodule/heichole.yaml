@@ -9,4 +9,4 @@ seq_len: 1
 channels: 3
 
 sample_base_on: phase
-sample_num: 300
+sample_num: null
