@@ -18,8 +18,9 @@ mlp:
 
 temporal_cfg:
   type: TCN
-  num_inputs: 512
-  num_channels: [64, 64]
-  kernel_size: 2
-  dropout: 0.2
+  spatial_feat_dim: 32
+  n_hid: 128
+  kernel_size: 7
+  dropout: 0.25
+  levels: 8
   bidirectional: False

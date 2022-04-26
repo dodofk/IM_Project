@@ -61,13 +61,14 @@ class BaselineModule(BaseClassificationModele):
         # self.temporal_model = instantiate(temporal_model)
 
         self.mlp = nn.Sequential(
+            nn.Dropout(),
             nn.Linear(
                 self.feature_extractor.num_features,
-                mlp.hidden_size,
+                self.num_class(),
             ),
-            nn.BatchNorm1d(mlp.hidden_size),
-            nn.ReLU(),
-            nn.Linear(mlp.hidden_size, self.num_class()),
+            # nn.BatchNorm1d(mlp.hidden_size),
+            # nn.ReLU(),
+            # nn.Linear(mlp.hidden_size, self.num_class()),
         )
 
         if task in ["phase"]:
