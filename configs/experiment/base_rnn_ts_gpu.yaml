@@ -33,12 +33,12 @@ model:
   weight_decay: 0.01
   backbone_model: resnet18
   temporal_cfg:
-    hidden_size: 7
+    hidden_size: 96
     num_layers: 1
 
 datamodule:
   batch_size: 32
-  seq_len: 8
+  seq_len: 4
 
 
 logger:
