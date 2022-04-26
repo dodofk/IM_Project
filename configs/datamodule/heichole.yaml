@@ -8,5 +8,5 @@ pin_memory: False
 seq_len: 1
 channels: 3
 
-sample_base_on: phase
-sample_num: null
+sample_base_on: null
+sample_num: 500
