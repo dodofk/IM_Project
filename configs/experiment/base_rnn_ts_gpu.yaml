@@ -5,7 +5,7 @@
 
 defaults:
   - override /datamodule: heichole.yaml
-  - override /model: ts.yaml
+  - override /model: ts_lstm.yaml
   - override /callbacks: default.yaml
   - override /logger: tensorboard.yaml
   - override /trainer: default.yaml
@@ -14,7 +14,7 @@ defaults:
 # this allows you to overwrite only specified parameters
 
 # name of the run determines folder name in logs
-name: "resnet_ts"
+name: "resnet_rnn_ts"
 
 seed: 12345
 
@@ -26,21 +26,16 @@ trainer:
   accelerator: gpu
   precision: 16
   accumulate_grad_batches: 4
-  auto_lr_find: True
+  auto_lr_find: False
 
 model:
   lr: 0.001
   weight_decay: 0.01
-  backbone_model: vit_base_patch32_224
-
-  temporal_cfg:
-    spatial_feet_dim: 64
-    n_hid: 256
-    dropout: 0.1
+#  backbone_model: vit_base_patch32_224
 
 datamodule:
   batch_size: 32
-  seq_len: 16
+  seq_len: 8
 
 
 logger:

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-gdown https://drive.google.com/uc?id=12GtCxaV1gZv4SBR3EojREh1VKmo7FGBx
+wget https://www.dropbox.com/s/d6dsilcoa7bstwk/heichole.zip?dl=1 -O HeiChole.zip
 
 mv HeiChole.zip data/HeiChole_data
 

@@ -52,7 +52,7 @@ class BaseClassificationModele(LightningModule):
         loss, preds, targets = self.step(batch)
 
         # log val metrics
-        f1 = self.val_f1(preds, targets)
+        self.val_f1(preds, targets)
         f1_macro = self.val_f1_macro(preds, targets)
         self.val_confusion_matrix(preds, targets)
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=False)
@@ -69,6 +69,8 @@ class BaseClassificationModele(LightningModule):
             on_epoch=True,
             prog_bar=True,
         )
+        print("train f1 macro", self.train_f1_macro.compute())
+        print("val f1 macro", self.val_f1_macro.compute())
         print("val f1: ", self.val_f1.compute())
         print("train f1: ", self.train_f1.compute())
         print("Confusion_matrix: ", self.val_confusion_matrix.compute())

@@ -24,6 +24,8 @@ class HeiCholeDataset(Dataset):
         seq_len: int = 8,
         channels: int = 3,
         np_random_seed: int = 12345,
+        sample_base_on: str = None,
+        sample_num: int = 300,
     ) -> None:
 
         assert split in ["train", "dev"], "Invalid split"
@@ -33,13 +35,21 @@ class HeiCholeDataset(Dataset):
         self.channels = channels
         self.np_random_seed = np_random_seed
 
-        self.df = pd.read_csv(
-            os.path.join(
-                get_original_cwd(),
-                data_dir,
-                f"{split}.csv",
-            ),
-        )
+        df = pd.read_csv(
+                os.path.join(
+                    get_original_cwd(),
+                    data_dir,
+                    f"{split}.csv",
+                ),
+            )
+        if sample_base_on is None:
+            self.df = df
+        else:
+            self.df = self.sample_label(
+                df,
+                sample_base_on,
+                sample_num,
+            )
 
         self.transform = transforms.Compose([
             transforms.Resize(256),
@@ -47,6 +57,12 @@ class HeiCholeDataset(Dataset):
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
+
+    def sample_label(self, df: pd.DataFrame, base_on: str, sample_num):
+        return df.groupby(base_on).sample(
+            n=sample_num,
+            random_state=12345,
+        ).reset_index()
 
     def __getitem__(self, index) -> Dict:
         df_row = self.df.iloc[index]
@@ -56,7 +72,7 @@ class HeiCholeDataset(Dataset):
 
         rng = default_rng(self.np_random_seed)
 
-        if image_id< self.seq_len:
+        if image_id < self.seq_len:
             numbers = rng.choice(list(range(1, image_id+1)), size=self.seq_len-1, replace=True)
             numbers.sort()
         else:
@@ -106,6 +122,8 @@ def build_heichole_dataloader(
     data_dir: str,
     seq_len: int,
     channels: int,
+    sample_base_on: str = None,
+    sample_num: int = None,
 ) -> DataLoader:
     assert split in ["train", "dev"], "Invalid Split"
 
@@ -114,6 +132,8 @@ def build_heichole_dataloader(
         data_dir=data_dir,
         seq_len=seq_len,
         channels=channels,
+        sample_base_on=sample_base_on,
+        sample_num=sample_num,
     )
 
     return DataLoader(
