@@ -5,7 +5,7 @@
 
 defaults:
   - override /datamodule: heichole.yaml
-  - override /model: ts.yaml
+  - override /model: ts_lstm.yaml
   - override /callbacks: default.yaml
   - override /logger: tensorboard.yaml
   - override /trainer: default.yaml
