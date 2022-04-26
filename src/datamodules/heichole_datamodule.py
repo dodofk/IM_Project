@@ -42,8 +42,6 @@ class HeiCholeDataModule(LightningDataModule):
             data_dir=self.hparams.data_dir,
             seq_len=self.hparams.seq_len,
             channels=self.hparams.channels,
-            sample_base_on=self.hparams.sample_base_on,
-            sample_num=self.hparams.sample_num,
         )
 
     def test_dataloader(self) -> DataLoader:
