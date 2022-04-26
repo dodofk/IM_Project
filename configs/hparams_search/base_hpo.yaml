@@ -1,10 +1,9 @@
 # Trying optuna hydra plugin
 # REF https://github.com/ashleve/lightning-hydra-template/blob/main/configs/hparams_search/mnist_optuna.yaml
 
-# BUG Can't override sweeper
 
-defaults:
-  - override /sweeper: optuna
+# defaults:
+#   - override hydra/sweeper: optuna
 
 hydra:
   sweeper:
