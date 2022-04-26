@@ -122,8 +122,8 @@ def build_heichole_dataloader(
     data_dir: str,
     seq_len: int,
     channels: int,
-    sample_base_on: str,
-    sample_num: int,
+    sample_base_on: str = None,
+    sample_num: int = None,
 ) -> DataLoader:
     assert split in ["train", "dev"], "Invalid Split"
 
