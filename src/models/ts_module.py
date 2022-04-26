@@ -43,11 +43,11 @@ class ResnetTSModule(BaseClassificationModele):
         )
         self.train_f1_macro = F1Score(
             num_classes=self.num_class(),
-            average="macro",
+            average="micro",
         )
         self.val_f1_macro = F1Score(
             num_classes=self.num_class(),
-            average="macro",
+            average="micro",
         )
         self.val_confusion_matrix = ConfusionMatrix(
             num_classes=self.num_class(),

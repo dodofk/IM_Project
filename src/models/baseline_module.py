@@ -41,11 +41,11 @@ class BaselineModule(BaseClassificationModele):
         )
         self.train_f1_macro = F1Score(
             num_classes=self.num_class(),
-            average="macro",
+            average="micro",
         )
         self.val_f1_macro = F1Score(
             num_classes=self.num_class(),
-            average="macro",
+            average="micro",
         )
         self.val_confusion_matrix = ConfusionMatrix(
             num_classes=self.num_class(),
@@ -86,7 +86,6 @@ class BaselineModule(BaseClassificationModele):
 
     def forward(self, x):
         x = self.feature_extractor(x)
-        # x = self.temporal_model(x)
         x = self.mlp(x)
         return x
 
@@ -108,7 +107,6 @@ class BaselineModule(BaseClassificationModele):
         preds: the pred by our model (i guess it would be sth like preds = torch.argmax(logits, dim=-1))
         y: correspond to the task it should be action or tool
         """
-        # TODO: finish the step part and choose the proper loss function for multi-classification
         logits = self.forward(batch["image"])
         loss = self.criterion(logits, batch[self.hparams.task])
         preds = torch.argmax(logits, dim=-1)
