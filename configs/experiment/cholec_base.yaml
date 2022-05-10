@@ -7,7 +7,7 @@
 
 defaults:
   - override /datamodule: cholect45.yaml
-  - override /model: cholec_baseline_module.yaml
+  - override /model: cholec_baseline.yaml
   - override /callbacks: default.yaml
   - override /logger: wandb.yaml
   - override /trainer: default.yaml
