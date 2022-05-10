@@ -144,9 +144,9 @@ class TripletBaselineModule(LightningModule):
         """
         tool_logit, target_logit, verb_logit, triplet_logit = self.forward(batch["image"])
         tool_loss = self.criterion(tool_logit, batch["tool"])
-        target_loss = self.criterion(tool_logit, batch["target"])
-        verb_loss = self.criterion(tool_logit, batch["verb"])
-        triplet_loss = self.criterion(tool_logit, batch["triplet"])
+        target_loss = self.criterion(target_logit, batch["target"])
+        verb_loss = self.criterion(verb_logit, batch["verb"])
+        triplet_loss = self.criterion(triplet_logit, batch["triplet"])
         return tool_loss+target_loss+verb_loss+triplet_loss, tool_logit, target_logit, verb_logit, triplet_logit
 
     def training_step(self, batch: Any, batch_idx: int):
