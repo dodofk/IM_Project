@@ -10,7 +10,7 @@ from torchvision import transforms
 PHASE_CNT = 7
 TRAIN_LABEL_PATH = "train.csv"
 VIDEO_NAME = "HeiChole"
-AUG_PHASE = ('4', '5', '6')
+AUG_PHASE = ("4", "5", "6")
 # if you want to put new image in original file, choose False
 CREATE_AUG_DIR = True
 # if you want to put new images' label in original csv, choose False
@@ -21,34 +21,42 @@ INCLUDE_ORG_LABEL = True
 picture_size = 256
 
 random.seed(time.time())
-padding = (int(random.uniform(0, 0.05) * picture_size),
-           int(random.uniform(0, 0.05) * picture_size),
-           int(random.uniform(0, 0.05) * picture_size),
-           int(random.uniform(0, 0.05) * picture_size)
-           )
+padding = (
+    int(random.uniform(0, 0.05) * picture_size),
+    int(random.uniform(0, 0.05) * picture_size),
+    int(random.uniform(0, 0.05) * picture_size),
+    int(random.uniform(0, 0.05) * picture_size),
+)
 
 transform_set = [
     # transforms.Pad(padding, padding_mode="edge"),
     transforms.RandomHorizontalFlip(p=0.8),
     transforms.RandomVerticalFlip(p=0.6),
-    transforms.RandomRotation(degrees=(0, 360), expand=False,
-                              center=(256 / 2 + random.randint(-10, 10), 256 / 2 + random.randint(-10, 10))),
+    transforms.RandomRotation(
+        degrees=(0, 360),
+        expand=False,
+        center=(256 / 2 + random.randint(-10, 10), 256 / 2 + random.randint(-10, 10)),
+    ),
     transforms.RandomPerspective(distortion_scale=0.6, p=0.8, interpolation=2),
-    transforms.ColorJitter(brightness=(1, 3), contrast=(1, 10), saturation=(1, 5), hue=(-0.1, 0.1))
+    transforms.ColorJitter(
+        brightness=(1, 3), contrast=(1, 10), saturation=(1, 5), hue=(-0.1, 0.1)
+    ),
 ]
 
-transform = transforms.Compose([
-    # transforms.RandomChoice(transform_set),
-    # transforms.RandomChoice(transform_set)
-    transforms.RandomOrder(transform_set)
-])
+transform = transforms.Compose(
+    [
+        # transforms.RandomChoice(transform_set),
+        # transforms.RandomChoice(transform_set)
+        transforms.RandomOrder(transform_set)
+    ]
+)
 
 aug_pic_dic = {}
 is_header = True
 re_write_infor = []
 
-with open(TRAIN_LABEL_PATH, 'r') as f:
-    lines = f.readlines();
+with open(TRAIN_LABEL_PATH, "r") as f:
+    lines = f.readlines()
     for line in lines:
         if is_header:
             is_header = False
@@ -71,8 +79,8 @@ counter = 1
 for img_infor in aug_pic_dic:
 
     # convert img into PIL image
-    video_no, img_id = img_infor.split('/')
-    img_pil = Image.open(f"{VIDEO_NAME}_{video_no}/{img_id}.jpg", mode='r')
+    video_no, img_id = img_infor.split("/")
+    img_pil = Image.open(f"{VIDEO_NAME}_{video_no}/{img_id}.jpg", mode="r")
     img_pil = img_pil.convert("RGB")
 
     new_img = transform(img_pil)
@@ -93,15 +101,15 @@ for img_infor in aug_pic_dic:
     aug_img_infor = [video_no, img_id + "_aug", img_phase]
 
     re_write_infor.append(aug_img_infor)
-    print(f"Already Augmented: {counter}", end='\r')
+    print(f"Already Augmented: {counter}", end="\r")
     counter += 1
 
 # if create new train_aug.csv, it inludes origin image's information
 if CREATE_AUG_LABEL:
-    with open(TRAIN_LABEL_PATH.replace(".csv", "_aug.csv"), 'w') as f:
+    with open(TRAIN_LABEL_PATH.replace(".csv", "_aug.csv"), "w") as f:
         for infor in re_write_infor:
             f.write(f"{infor[0]},{infor[1]},{infor[2]}\n")
 else:
-    with open(TRAIN_LABEL_PATH, 'a') as f:
+    with open(TRAIN_LABEL_PATH, "a") as f:
         for infor in re_write_infor:
             f.write(f"{infor[0]},{infor[1]},{infor[2]}\n")
