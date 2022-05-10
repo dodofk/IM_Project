@@ -193,6 +193,7 @@ class TripletBaselineModule(LightningModule):
             weight_decay=self.hparams.optim.weight_decay,
         )
         lr_scheduler = getattr(torch.optim.lr_scheduler, self.hparams.optim.scheduler_name)(
+            opt,
             **self.hparams.optim.scheduler,
         )
         return [opt], [lr_scheduler]
