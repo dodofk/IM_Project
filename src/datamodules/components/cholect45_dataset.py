@@ -87,7 +87,7 @@ class CholecT45Dataset(Dataset):
 
     def __getitem__(self, index) -> Dict:
         image_id = self.triplet_labels[index, 0]
-        if image_id < self.seq_len:
+        if image_id >= self.seq_len:
             numbers = list(range(image_id + 1 - self.seq_len, image_id + 1))
         else:
             numbers = list(range(1, image_id + 1))
