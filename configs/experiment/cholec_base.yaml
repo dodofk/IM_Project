@@ -31,6 +31,11 @@ trainer:
 
 model:
   backbone_model: swin_base_patch4_window7_224_in22k
+  optim:
+    lr: 0.005
+
+  temporal_cfg:
+    num_layers: 2
 
 callback:
   model_checkpoint:
