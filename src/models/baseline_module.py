@@ -8,6 +8,7 @@ from torchmetrics import F1Score
 from torchmetrics.classification import ConfusionMatrix
 
 
+# todo: rewrite the optim lr weight_decay config in same layer and also lr scheduler
 class BaselineModule(BaseClassificationModele):
     def __init__(
             self,
@@ -139,3 +140,12 @@ class BaselineModule(BaseClassificationModele):
             lr=self.hparams.lr,
             weight_decay=self.hparams.weight_decay,
         )
+        # optimizer = getattr(torch.optim, self.hparams.optim)(
+        #     params=self.parameters(),
+        #     lr=self.hparams.lr,
+        #     weight_decay=self.hparams.weight_decay,
+        # )
+        # lr_scheduler = getattr(torch.optim.lr_scheduler, self.hparams.lr_scheduler)(
+        #     factor=self.hparams.factor
+        # )
+        # return [optimizer], [lr_scheduler]
