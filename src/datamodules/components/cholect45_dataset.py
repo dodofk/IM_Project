@@ -96,9 +96,7 @@ class CholecT45Dataset(Dataset):
 
         frames = torch.FloatTensor(self.seq_len, self.channels, 224, 224)
 
-        # print("testing: ", numbers)
         for i, _image_id in enumerate(numbers):
-            # print("debug: ", _image_id)
             basename = "{}.png".format(str(_image_id).zfill(6))
             img_path = os.path.join(get_original_cwd(), self.img_dir, basename)
             image = Image.open(img_path)

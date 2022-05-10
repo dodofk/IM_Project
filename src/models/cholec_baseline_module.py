@@ -117,10 +117,10 @@ class TripletBaselineModule(LightningModule):
 
         tool_logit = self.tool_head(feature)
         target_logit = self.target_head(feature)
-        verb_ts_feature = self.verb_ts(feature)[:, -1, :]
-        verb_logit = self.verb_ts(verb_ts_feature)
-        triplet_ts_feature = self.triplet_ts(feature)[:, -1, :]
-        triplet_logit = self.triplet_head(triplet_ts_feature)
+        verb_ts_feature, _ = self.verb_ts(feature)
+        verb_logit = self.verb_ts(verb_ts_feature[:, -1, :])
+        triplet_ts_feature, _ = self.triplet_ts(feature)
+        triplet_logit = self.triplet_head(triplet_ts_feature[:, -1, :])
 
         return tool_logit, target_logit, verb_logit, triplet_logit
 
