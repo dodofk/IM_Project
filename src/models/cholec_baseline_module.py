@@ -151,16 +151,19 @@ class TripletBaselineModule(LightningModule):
         triplet_loss = self.criterion(triplet_logit, batch["triplet"])
         return (
             tool_loss + target_loss + verb_loss + triplet_loss,
-            tool_logit,
-            target_logit,
-            verb_logit,
-            triplet_logit,
+            tool_logit.detach().cpu().numpy(),
+            target_logit.detach().cpu().numpy(),
+            verb_logit.detach().cpu().numpy(),
+            triplet_logit.detach().cpu().numpy(),
         )
 
     def training_step(self, batch: Any, batch_idx: int):
         loss, tool_logit, target_logit, verb_logit, triplet_logit = self.step(batch)
 
-        self.train_recog_metric.update(batch["triplet"], triplet_logit.detach().cpu().numpy())
+        self.train_recog_metric.update(
+            batch["triplet"].cpu().numpy(),
+            triplet_logit,
+        )
         self.log("train/loss", loss, on_step=True, on_epoch=True, prog_bar=False)
 
         return loss
@@ -176,7 +179,10 @@ class TripletBaselineModule(LightningModule):
     def validation_step(self, batch: Any, batch_idx: int):
         loss, tool_logit, target_logit, verb_logit, triplet_logit = self.step(batch)
 
-        self.valid_recog_metric.update(batch["triplet"], triplet_logit.detach().cpu().numpy())
+        self.valid_recog_metric.update(
+            batch["triplet"].cpu().numpy(),
+            triplet_logit,
+        )
         self.log("valid/loss", loss, on_step=True, on_epoch=True, prog_bar=False)
 
         return loss
