@@ -145,9 +145,9 @@ def build_dataloader(
     seq_len: int,
     channels: int,
 ) -> DataLoader:
-    assert split in ["train", "dev"], "Invalid Split"
+    assert split in ["train", "dev", "test"], "Invalid Split"
     iterable_dataset = []
-    cholect45 = {
+    video_split = {
         "train": [
             79,
             2,
@@ -187,11 +187,9 @@ def build_dataloader(
             12,
         ],
         "dev": [78, 43, 62, 35, 74, 1, 56, 4, 13],
+        "test": [78, 43, 62, 35, 74, 1, 56, 4, 13],
     }
-    video_split = cholect45
-    train_videos = video_split["train"]
-    if split == "dev":
-        train_videos = video_split["dev"]
+    train_videos = video_split[split]
     train_records = ["VID{}".format(str(v).zfill(2)) for v in train_videos]
 
     for video in train_records:
