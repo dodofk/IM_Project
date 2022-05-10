@@ -142,12 +142,20 @@ class TripletBaselineModule(LightningModule):
         preds: the pred by our model (i guess it would be sth like preds = torch.argmax(logits, dim=-1))
         y: correspond to the task it should be action or tool
         """
-        tool_logit, target_logit, verb_logit, triplet_logit = self.forward(batch["image"])
+        tool_logit, target_logit, verb_logit, triplet_logit = self.forward(
+            batch["image"]
+        )
         tool_loss = self.criterion(tool_logit, batch["tool"])
         target_loss = self.criterion(target_logit, batch["target"])
         verb_loss = self.criterion(verb_logit, batch["verb"])
         triplet_loss = self.criterion(triplet_logit, batch["triplet"])
-        return tool_loss+target_loss+verb_loss+triplet_loss, tool_logit, target_logit, verb_logit, triplet_logit
+        return (
+            tool_loss + target_loss + verb_loss + triplet_loss,
+            tool_logit.detach().cpu().numpy(),
+            target_logit.detach().cpu().numpy(),
+            verb_logit.detach().cpu().numpy(),
+            triplet_logit.detach().cpu().numpy(),
+        )
 
     def training_step(self, batch: Any, batch_idx: int):
         loss, tool_logit, target_logit, verb_logit, triplet_logit = self.step(batch)
@@ -158,7 +166,9 @@ class TripletBaselineModule(LightningModule):
         return loss
 
     def training_epoch_end(self, outputs: List[Any]):
-        self.log("train/ivt_mAP", self.train_recog_metric.compute_global_AP("ivt")["mAP"])
+        self.log(
+            "train/ivt_mAP", self.train_recog_metric.compute_global_AP("ivt")["mAP"]
+        )
         self.log("train/i_mAP", self.train_recog_metric.compute_global_AP("i")["mAP"])
         self.log("train/v_mAP", self.train_recog_metric.compute_global_AP("v")["mAP"])
         self.log("train/t_mAP", self.train_recog_metric.compute_global_AP("t")["mAP"])
@@ -172,7 +182,9 @@ class TripletBaselineModule(LightningModule):
         return loss
 
     def validation_epoch_end(self, outputs: List[Any]):
-        self.log("valid/ivt_mAP", self.valid_recog_metric.compute_global_AP("ivt")["mAP"])
+        self.log(
+            "valid/ivt_mAP", self.valid_recog_metric.compute_global_AP("ivt")["mAP"]
+        )
         self.log("valid/i_mAP", self.valid_recog_metric.compute_global_AP("i")["mAP"])
         self.log("valid/v_mAP", self.valid_recog_metric.compute_global_AP("v")["mAP"])
         self.log("valid/t_mAP", self.valid_recog_metric.compute_global_AP("t")["mAP"])
@@ -192,7 +204,9 @@ class TripletBaselineModule(LightningModule):
             lr=self.hparams.optim.lr,
             weight_decay=self.hparams.optim.weight_decay,
         )
-        lr_scheduler = getattr(torch.optim.lr_scheduler, self.hparams.optim.scheduler_name)(
+        lr_scheduler = getattr(
+            torch.optim.lr_scheduler, self.hparams.optim.scheduler_name
+        )(
             opt,
             **self.hparams.optim.scheduler,
         )
