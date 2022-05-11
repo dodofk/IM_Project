@@ -42,7 +42,7 @@ class TripletBaselineModule(LightningModule):
                 self.feature_extractor.num_features,
                 self.class_num["tool"],
             ),
-            nn.Sigmoid(),
+            # nn.Sigmoid(),
         )
 
         self.target_head = nn.Sequential(
@@ -50,7 +50,7 @@ class TripletBaselineModule(LightningModule):
                 self.feature_extractor.num_features,
                 self.class_num["target"],
             ),
-            nn.Sigmoid(),
+            # nn.Sigmoid(),
         )
 
         self.verb_ts = nn.Sequential(
@@ -68,7 +68,7 @@ class TripletBaselineModule(LightningModule):
                 temporal_cfg.hidden_size * self.temporal_direction(),
                 self.class_num["verb"],
             ),
-            nn.Sigmoid(),
+            # nn.Sigmoid(),
         )
 
         self.triplet_ts = nn.Sequential(
@@ -86,7 +86,7 @@ class TripletBaselineModule(LightningModule):
                 temporal_cfg.hidden_size * self.temporal_direction(),
                 self.class_num["triplet"],
             ),
-            nn.Sigmoid(),
+            # nn.Sigmoid(),
         )
 
         self.criterion = torch.nn.BCEWithLogitsLoss()
