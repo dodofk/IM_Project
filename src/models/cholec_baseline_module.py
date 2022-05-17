@@ -6,6 +6,8 @@ import torch.nn as nn
 from pytorch_lightning import LightningModule
 import ivtmetrics
 
+from pprint import pprint
+
 
 class TripletBaselineModule(LightningModule):
     def __init__(
@@ -169,9 +171,9 @@ class TripletBaselineModule(LightningModule):
         return loss
 
     def training_epoch_end(self, outputs: List[Any]):
-        self.log(
-            "train/ivt_mAP", self.train_recog_metric.compute_global_AP("ivt")["mAP"]
-        )
+        ivt_result = self.train_recog_metric.compute_global_AP("ivt")
+        pprint(ivt_result["AP"])
+        self.log("train/ivt_mAP", ivt_result["mAP"])
         self.log("train/i_mAP", self.train_recog_metric.compute_global_AP("i")["mAP"])
         self.log("train/v_mAP", self.train_recog_metric.compute_global_AP("v")["mAP"])
         self.log("train/t_mAP", self.train_recog_metric.compute_global_AP("t")["mAP"])
@@ -188,8 +190,11 @@ class TripletBaselineModule(LightningModule):
         return loss
 
     def validation_epoch_end(self, outputs: List[Any]):
+        ivt_result = self.valid_recog_metric.compute_global_AP("ivt")
+        pprint(ivt_result["AP"])
         self.log(
-            "valid/ivt_mAP", self.valid_recog_metric.compute_global_AP("ivt")["mAP"]
+            "valid/ivt_mAP",
+            ivt_result["mAP"],
         )
         self.log("valid/i_mAP", self.valid_recog_metric.compute_global_AP("i")["mAP"])
         self.log("valid/v_mAP", self.valid_recog_metric.compute_global_AP("v")["mAP"])
