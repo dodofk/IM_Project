@@ -35,6 +35,8 @@ model:
     lr: 0.005
 
   temporal_cfg:
+    type: GRU
+    hidden_size: 512
     num_layers: 2
 
 callback:
