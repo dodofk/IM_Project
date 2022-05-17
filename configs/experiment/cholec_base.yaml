@@ -48,3 +48,8 @@ callback:
 datamodule:
   batch_size: 32
   seq_len: 2
+
+logger:
+  wandb:
+    project: "cholect45"
+    tags: ["baseline", "${name}"]
