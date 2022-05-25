@@ -7,6 +7,7 @@ import torch.nn as nn
 from pytorch_lightning import LightningModule
 import ivtmetrics
 from hydra.utils import get_original_cwd
+import numpy as np
 
 from pprint import pprint
 
@@ -219,9 +220,21 @@ class TripletBaselineModule(LightningModule):
     def test_step(self, batch: Any, batch_idx: int):
         loss, tool_logit, target_logit, verb_logit, triplet_logit = self.step(batch)
 
+        # post_tool_logit, post_target_logit, post_verb_logit = (
+        #     np.array([]),
+        #     np.array([]),
+        #     np.array([]),
+        # )
+        #
+        # for _triplet in self.triplet_map:
+        #     post_tool_logit = np.append(post_tool_logit, tool_logit[_triplet[1]])
+        #     post_verb_logit = np.append(post_verb_logit, verb_logit[_triplet[2]])
+        #     post_target_logit = np.append(post_target_logit, tool_logit[_triplet[3]])
+
         self.test_recog_metric.update(
             batch["triplet"].cpu().numpy(),
             triplet_logit,
+            # triplet_logit + 0.4 * post_tool_logit + 0.2 * post_verb_logit,
         )
         self.log("test/loss", loss, on_step=True, on_epoch=True, prog_bar=False)
 
