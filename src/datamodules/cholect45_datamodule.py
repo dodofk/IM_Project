@@ -41,7 +41,15 @@ class CholecT45DataModule(LightningDataModule):
         )
 
     def test_dataloader(self) -> DataLoader:
-        raise NotImplementedError
+        return build_dataloader(
+            batch_size=self.hparams.batch_size,
+            num_workers=self.hparams.num_workers,
+            pin_memory=self.hparams.pin_memory,
+            split="dev",
+            data_dir=self.hparams.data_dir,
+            seq_len=self.hparams.seq_len,
+            channels=self.hparams.channels,
+        )
 
     def predict_dataloader(self) -> DataLoader:
         raise NotImplementedError

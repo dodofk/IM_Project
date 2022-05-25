@@ -1,3 +1,4 @@
+import os
 from typing import Any, List
 from omegaconf import DictConfig
 import timm
@@ -5,6 +6,7 @@ import torch
 import torch.nn as nn
 from pytorch_lightning import LightningModule
 import ivtmetrics
+from hydra.utils import get_original_cwd
 
 from pprint import pprint
 
@@ -17,6 +19,7 @@ class TripletBaselineModule(LightningModule):
         # loss_weight: List = None,
         use_timm: bool = False,
         backbone_model: str = "resnet34",
+        triplet_map: str = "./data/CholecT45/dict/maps.txt",
     ):
         super().__init__()
 
@@ -24,6 +27,7 @@ class TripletBaselineModule(LightningModule):
 
         self.train_recog_metric = ivtmetrics.Recognition(num_class=100)
         self.valid_recog_metric = ivtmetrics.Recognition(num_class=100)
+        self.test_recog_mteric = ivtmetrics.Recognition(num_class=100)
 
         self.class_num = {
             "tool": 6,
@@ -92,6 +96,18 @@ class TripletBaselineModule(LightningModule):
         )
 
         self.criterion = torch.nn.BCEWithLogitsLoss()
+
+        self.triplet_map = self.contstruct_triplet_map()
+
+    def contstruct_triplet_map(self):
+        with open(os.path.join(get_original_cwd(), self.hparams.triplet_map), "r") as f:
+            triplet_map = f.read().split("\n")[1:-2]
+
+        ret = list()
+        for triplet in triplet_map:
+            ret.append(list(map(int, triplet.split(","))))
+
+        return ret
 
     def temporal_direction(self):
         if (
@@ -201,13 +217,31 @@ class TripletBaselineModule(LightningModule):
         self.log("valid/t_mAP", self.valid_recog_metric.compute_global_AP("t")["mAP"])
 
     def test_step(self, batch: Any, batch_idx: int):
-        raise NotImplementedError
+        loss, tool_logit, target_logit, verb_logit, triplet_logit = self.step(batch)
+
+        self.test_recog_metric.update(
+            batch["triplet"].cpu().numpy(),
+            triplet_logit,
+        )
+        self.log("test/loss", loss, on_step=True, on_epoch=True, prog_bar=False)
+
+        return loss
 
     def test_epoch_end(self, outputs: List[Any]):
-        pass
+        ivt_result = self.test_recog_metric.compute_global_AP("ivt")
+        pprint(ivt_result["AP"])
+        self.log(
+            "test/ivt_mAP",
+            ivt_result["mAP"],
+        )
+        self.log("test/i_mAP", self.test_recog_metric.compute_global_AP("i")["mAP"])
+        self.log("test/v_mAP", self.test_recog_metric.compute_global_AP("v")["mAP"])
+        self.log("test/t_mAP", self.test_recog_metric.compute_global_AP("t")["mAP"])
 
     def on_epoch_end(self):
-        super().on_epoch_end()
+        self.train_recog_metric.reset()
+        self.valid_recog_metric.reset()
+        self.test_recog_mteric.reset()
 
     def configure_optimizers(self):
         opt = getattr(torch.optim, self.hparams.optim.optim_name)(
