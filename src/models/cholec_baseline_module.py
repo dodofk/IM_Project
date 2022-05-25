@@ -226,10 +226,19 @@ class TripletBaselineModule(LightningModule):
         #     np.array([]),
         # )
         #
-        # for _triplet in self.triplet_map:
-        #     post_tool_logit = np.append(post_tool_logit, tool_logit[_triplet[1]])
-        #     post_verb_logit = np.append(post_verb_logit, verb_logit[_triplet[2]])
-        #     post_target_logit = np.append(post_target_logit, tool_logit[_triplet[3]])
+        # for i in range(len(batch)):
+        #     _post_tool_logit, _post_target_logit, _post_verb_logit = (
+        #         np.array([]),
+        #         np.array([]),
+        #         np.array([]),
+        #     )
+        #     for _triplet in self.triplet_map:
+        #         _post_tool_logit = np.append(_post_tool_logit, tool_logit[i][_triplet[1]])
+        #         _post_verb_logit = np.append(_post_verb_logit, verb_logit[i][_triplet[2]])
+        #         _post_target_logit = np.append(_post_target_logit, tool_logit[i][_triplet[3]])
+        #     post_tool_logit = np.append(post_tool_logit, _post_tool_logit)
+        #     post_verb_logit = np.append(post_verb_logit, _post_tool_logit)
+        #     post_target_logit = np.append(post_target_logit, _post_tool_logit)
 
         self.test_recog_metric.update(
             batch["triplet"].cpu().numpy(),
