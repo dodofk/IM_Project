@@ -237,8 +237,8 @@ class TripletBaselineModule(LightningModule):
         #         _post_verb_logit = np.append(_post_verb_logit, verb_logit[i][_triplet[2]])
         #         _post_target_logit = np.append(_post_target_logit, target_logit[i][_triplet[3]])
         #     post_tool_logit = np.append(post_tool_logit, _post_tool_logit)
-        #     post_verb_logit = np.append(post_verb_logit, _post_tool_logit)
-        #     post_target_logit = np.append(post_target_logit, _post_tool_logit)
+        #     post_verb_logit = np.append(post_verb_logit, _post_verb_logit)
+        #     post_target_logit = np.append(post_target_logit, _post_target_logit)
 
         self.test_recog_metric.update(
             batch["triplet"].cpu().numpy(),
