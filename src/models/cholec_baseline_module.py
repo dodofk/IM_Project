@@ -27,7 +27,7 @@ class TripletBaselineModule(LightningModule):
 
         self.train_recog_metric = ivtmetrics.Recognition(num_class=100)
         self.valid_recog_metric = ivtmetrics.Recognition(num_class=100)
-        self.test_recog_mteric = ivtmetrics.Recognition(num_class=100)
+        self.test_recog_metric = ivtmetrics.Recognition(num_class=100)
 
         self.class_num = {
             "tool": 6,
@@ -241,7 +241,7 @@ class TripletBaselineModule(LightningModule):
     def on_epoch_end(self):
         self.train_recog_metric.reset()
         self.valid_recog_metric.reset()
-        self.test_recog_mteric.reset()
+        self.test_recog_metric.reset()
 
     def configure_optimizers(self):
         opt = getattr(torch.optim, self.hparams.optim.optim_name)(
