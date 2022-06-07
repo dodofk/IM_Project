@@ -139,7 +139,9 @@ class TripletBaselineModule(LightningModule):
         )
         feature = self.frames_feature_extractor(x, output_tensor)
 
+        feature = feature.permute(0, 2, 1)
         feature = self.bn(feature)
+        feature = feature.permute(0, 2, 1)
 
         tool_logit = self.tool_head(feature[:, -1, :])
         target_logit = self.target_head(feature[:, -1, :])
