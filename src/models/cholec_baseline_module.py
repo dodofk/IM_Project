@@ -17,6 +17,7 @@ class TripletBaselineModule(LightningModule):
         self,
         temporal_cfg: DictConfig,
         optim: DictConfig,
+        loss_weight: DictConfig,
         # loss_weight: List = None,
         use_timm: bool = False,
         backbone_model: str = "resnet34",
@@ -42,6 +43,10 @@ class TripletBaselineModule(LightningModule):
             pretrained=use_timm,
             in_chans=3,
             num_classes=0,
+        )
+
+        self.bn = nn.BatchNorm1d(
+            self.feature_extractor.num_features,
         )
 
         self.tool_head = nn.Sequential(
@@ -134,6 +139,8 @@ class TripletBaselineModule(LightningModule):
         )
         feature = self.frames_feature_extractor(x, output_tensor)
 
+        feature = self.bn(feature)
+
         tool_logit = self.tool_head(feature[:, -1, :])
         target_logit = self.target_head(feature[:, -1, :])
         verb_ts_feature, _ = self.verb_ts(feature)
@@ -169,7 +176,10 @@ class TripletBaselineModule(LightningModule):
         verb_loss = self.criterion(verb_logit, batch["verb"])
         triplet_loss = self.criterion(triplet_logit, batch["triplet"])
         return (
-            tool_loss + target_loss + verb_loss + triplet_loss,
+            self.hparams.loss_weight.tool_weight * tool_loss
+            + self.hparams.loss_weight.target_weight * target_loss
+            + self.hparams.loss_weight.verb_weight * verb_loss
+            + self.hparams.loss_weight.triplet_weight * triplet_loss,
             tool_logit.detach().cpu().numpy(),
             target_logit.detach().cpu().numpy(),
             verb_logit.detach().cpu().numpy(),
@@ -220,30 +230,22 @@ class TripletBaselineModule(LightningModule):
     def test_step(self, batch: Any, batch_idx: int):
         loss, tool_logit, target_logit, verb_logit, triplet_logit = self.step(batch)
 
-        # post_tool_logit, post_target_logit, post_verb_logit = (
-        #     np.array([]),
-        #     np.array([]),
-        #     np.array([]),
-        # )
-        #
-        # for i in range(len(batch)):
-        #     _post_tool_logit, _post_target_logit, _post_verb_logit = (
-        #         np.array([]),
-        #         np.array([]),
-        #         np.array([]),
-        #     )
-        #     for _triplet in self.triplet_map:
-        #         _post_tool_logit = np.append(_post_tool_logit, tool_logit[i][_triplet[1]])
-        #         _post_verb_logit = np.append(_post_verb_logit, verb_logit[i][_triplet[2]])
-        #         _post_target_logit = np.append(_post_target_logit, target_logit[i][_triplet[3]])
-        #     post_tool_logit = np.append(post_tool_logit, _post_tool_logit)
-        #     post_verb_logit = np.append(post_verb_logit, _post_verb_logit)
-        #     post_target_logit = np.append(post_target_logit, _post_target_logit)
+        post_tool_logit, post_target_logit, post_verb_logit = (
+            np.zeros([triplet_logit.shape[0], 100]),
+            np.zeros([triplet_logit.shape[0], 100]),
+            np.zeros([triplet_logit.shape[0], 100]),
+        )
+
+        for i in range(triplet_logit.shape[0]):
+            for index, _triplet in enumerate(self.triplet_map):
+                post_tool_logit[i][index] = tool_logit[i][_triplet[1]]
+                post_verb_logit[i][index] = verb_logit[i][_triplet[2]]
+                post_target_logit[i][index] = target_logit[i][_triplet[3]]
 
         self.test_recog_metric.update(
             batch["triplet"].cpu().numpy(),
-            triplet_logit,
-            # triplet_logit + 0.4 * post_tool_logit + 0.2 * post_verb_logit,
+            # triplet_logit,
+            triplet_logit + 0.4 * post_target_logit + 0.2 * post_verb_logit,
         )
         self.log("test/loss", loss, on_step=True, on_epoch=True, prog_bar=False)
 

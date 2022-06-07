@@ -16,4 +16,10 @@ optim:
   scheduler:
     T_max: 10
 
+loss_weight:
+  tool_weight: 0.75
+  target_weight: 1.0
+  verb_weight: 1.0
+  triplet_weight: 1.25
+
 triplet_map: "./data/CholecT45/dict/maps.txt"
