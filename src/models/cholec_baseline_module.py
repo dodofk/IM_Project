@@ -191,21 +191,22 @@ class TripletBaselineModule(LightningModule):
     def training_step(self, batch: Any, batch_idx: int):
         loss, tool_logit, target_logit, verb_logit, triplet_logit = self.step(batch)
 
-        self.train_recog_metric.update(
-            batch["triplet"].cpu().numpy(),
-            triplet_logit,
-        )
+        # self.train_recog_metric.update(
+        #     batch["triplet"].cpu().numpy(),
+        #     triplet_logit,
+        # )
         self.log("train/loss", loss, on_step=True, on_epoch=True, prog_bar=False)
 
         return loss
 
     def training_epoch_end(self, outputs: List[Any]):
-        ivt_result = self.train_recog_metric.compute_global_AP("ivt")
-        pprint(ivt_result["AP"])
-        self.log("train/ivt_mAP", ivt_result["mAP"])
-        self.log("train/i_mAP", self.train_recog_metric.compute_global_AP("i")["mAP"])
-        self.log("train/v_mAP", self.train_recog_metric.compute_global_AP("v")["mAP"])
-        self.log("train/t_mAP", self.train_recog_metric.compute_global_AP("t")["mAP"])
+        pass
+        # ivt_result = self.train_recog_metric.compute_global_AP("ivt")
+        # pprint(ivt_result["AP"])
+        # self.log("train/ivt_mAP", ivt_result["mAP"])
+        # self.log("train/i_mAP", self.train_recog_metric.compute_global_AP("i")["mAP"])
+        # self.log("train/v_mAP", self.train_recog_metric.compute_global_AP("v")["mAP"])
+        # self.log("train/t_mAP", self.train_recog_metric.compute_global_AP("t")["mAP"])
 
     def validation_step(self, batch: Any, batch_idx: int):
         loss, tool_logit, target_logit, verb_logit, triplet_logit = self.step(batch)
