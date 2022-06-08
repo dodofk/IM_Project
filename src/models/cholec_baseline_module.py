@@ -49,6 +49,15 @@ class TripletBaselineModule(LightningModule):
             self.feature_extractor.num_features,
         )
 
+        self.tool_information = nn.Sequential(
+            nn.Linear(
+                self.feature_extractor.num_features,
+                self.feature_extractor.num_features,
+            ),
+            nn.ReLU(),
+            nn.Dropout(),
+        )
+
         self.tool_head = nn.Sequential(
             nn.Linear(
                 self.feature_extractor.num_features,
@@ -143,8 +152,12 @@ class TripletBaselineModule(LightningModule):
         feature = self.bn(feature)
         feature = feature.permute(0, 2, 1)
 
-        tool_logit = self.tool_head(feature[:, -1, :])
-        target_logit = self.target_head(feature[:, -1, :])
+        tool_info = self.tool_information(feature[:, -1, :])
+        tool_logit = self.tool_head(tool_info)
+        target_logit = self.target_head(tool_logit)
+        # tool_logit = self.tool_head(feature[:, -1, :])
+        # target_logit = self.target_head(feature[:, -1, :])
+
         verb_ts_feature, _ = self.verb_ts(feature)
         verb_logit = self.verb_head(verb_ts_feature[:, -1, :])
         triplet_ts_feature, _ = self.triplet_ts(feature)
