@@ -154,7 +154,7 @@ class TripletBaselineModule(LightningModule):
 
         tool_info = self.tool_information(feature[:, -1, :])
         tool_logit = self.tool_head(tool_info)
-        target_logit = self.target_head(tool_logit)
+        target_logit = self.target_head(tool_info)
         # tool_logit = self.tool_head(feature[:, -1, :])
         # target_logit = self.target_head(feature[:, -1, :])
 
