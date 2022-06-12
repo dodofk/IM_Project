@@ -186,7 +186,7 @@ class TripletAttentionModule(LightningModule):
         tool_info = tool_seq_info.mean(dim=1)
         tool_logit = self.tool_head(tool_info)
 
-        attn_output = self.target_tool_attention(
+        attn_output, _ = self.target_tool_attention(
             feature[:, -1, :, :],
             tool_seq_info,
             tool_seq_info,
