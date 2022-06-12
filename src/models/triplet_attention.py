@@ -143,9 +143,7 @@ class TripletAttentionModule(LightningModule):
     def test_dim(self):
         self.feature_extractor.eval()
         x = torch.randn(1, 3, 224, 224)
-        self.feature_extractor.forward_features(x)
-
-        return x.shape[1]
+        return self.feature_extractor.forward_features(x).shape[1]
 
     def contstruct_triplet_map(self):
         with open(os.path.join(get_original_cwd(), self.hparams.triplet_map), "r") as f:
@@ -172,7 +170,9 @@ class TripletAttentionModule(LightningModule):
         output: torch.Tensor,
     ):
         for i in range(0, x.shape[1]):
-            output[:, i, :, :] = self.feature_extractor.forward_features(x[:, i, :, :, :])
+            output[:, i, :, :] = self.feature_extractor.forward_features(
+                x[:, i, :, :, :]
+            )
         return output.to(self.device)
 
     def forward(self, x):
