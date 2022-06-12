@@ -41,28 +41,28 @@ class TripletAttentionModule(LightningModule):
             "triplet": 100,
         }
         self.train_tool_map = Precision(
-            num_classes=self.class_num["tool"], average="macro"
+            num_classes=self.class_num["tool"], average="macro", multiclass=True,
         )
         self.train_verb_map = Precision(
-            num_classes=self.class_num["verb"], average="macro"
+            num_classes=self.class_num["verb"], average="macro", multiclass=True,
         )
         self.train_target_map = Precision(
-            num_classes=self.class_num["target"], average="macro"
+            num_classes=self.class_num["target"], average="macro", multiclass=True,
         )
         self.train_triplet_map = Precision(
-            num_classes=self.class_num["triplet"], average="macro"
+            num_classes=self.class_num["triplet"], average="macro", multiclass=True,
         )
         self.valid_tool_map = Precision(
-            num_classes=self.class_num["tool"], average="macro"
+            num_classes=self.class_num["tool"], average="macro", multiclass=True,
         )
         self.valid_verb_map = Precision(
-            num_classes=self.class_num["verb"], average="macro"
+            num_classes=self.class_num["verb"], average="macro", multiclass=True,
         )
         self.valid_target_map = Precision(
-            num_classes=self.class_num["target"], average="macro"
+            num_classes=self.class_num["target"], average="macro", multiclass=True,
         )
         self.valid_triplet_map = Precision(
-            num_classes=self.class_num["triplet"], average="macro"
+            num_classes=self.class_num["triplet"], average="macro", multiclass=True,
         )
 
         assert (
