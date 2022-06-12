@@ -14,7 +14,7 @@ tool_component:
   dropout_ratio: 0.1
 
 target_tool_attention:
-  nhead: 4
+  num_heads: 4
 
 optim:
   optim_name: AdamW
