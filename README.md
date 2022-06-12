@@ -35,6 +35,13 @@ conda activate myenv
 
 # install requirements
 pip install -r requirements.txt
+
+# Setup timm
+cd src/vendor/pytorch-image-models 
+pip install -e .
+# alternative
+pip install git+https://github.com/rwightman/pytorch-image-models
+
 ```
 
 ### Dataset Setup
