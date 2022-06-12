@@ -138,6 +138,15 @@ class TripletAttentionModule(LightningModule):
 
         self.triplet_map = self.contstruct_triplet_map()
 
+        self.vit_dim = self.test_dim()
+
+    def test_dim(self):
+        self.feature_extractor.eval()
+        x = torch.randn(1, 3, 224, 224)
+        self.feature_extractor.forward_features(x)
+
+        return x.shape[1]
+
     def contstruct_triplet_map(self):
         with open(os.path.join(get_original_cwd(), self.hparams.triplet_map), "r") as f:
             triplet_map = f.read().split("\n")[1:-2]
@@ -163,25 +172,27 @@ class TripletAttentionModule(LightningModule):
         output: torch.Tensor,
     ):
         for i in range(0, x.shape[1]):
-            output[:, i, :] = self.feature_extractor(x[:, i, :, :, :])
+            output[:, i, :, :] = self.feature_extractor.forward_features(x[:, i, :, :, :])
         return output.to(self.device)
 
     def forward(self, x):
         output_tensor = torch.zeros(
-            [x.shape[0], x.shape[1], self.feature_extractor.num_features]
+            [x.shape[0], x.shape[1], self.vit_dim, self.feature_extractor.num_features]
         )
         feature = self.frames_feature_extractor(x, output_tensor)
 
-        tool_info = self.tool_information(feature[:, -1, :])
+        tool_seq_info = self.tool_information(feature[:, -1, :, :])
+
+        tool_info = tool_seq_info.mean(dim=1)
         tool_logit = self.tool_head(tool_info)
 
         attn_output = self.target_tool_attention(
-            feature, tool_logit, tool_logit, need_weights=False
+            feature, tool_seq_info, tool_seq_info, need_weights=False
         )
 
-        target_logit = self.target_head(attn_output)
+        target_logit = self.target_head(attn_output.mean(dim=1))
 
-        ts_feature, _ = self.ts(feature)
+        ts_feature, _ = self.ts(feature.mean(dim=1))
         verb_logit = self.verb_head((ts_feature[:, -1, :] + tool_info) / 2)
         triplet_logit = self.triplet_head((ts_feature[:, -1, :] + tool_info) / 2)
 
