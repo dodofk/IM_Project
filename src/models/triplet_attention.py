@@ -250,10 +250,10 @@ class TripletAttentionModule(LightningModule):
         #     batch["triplet"].cpu().numpy(),
         #     triplet_logit,
         # )
-        self.train_tool_map(tool_logit, batch["tool"])
-        self.train_target_map(target_logit, batch["target"])
-        self.train_verb_map(verb_logit, batch["verb"])
-        self.train_triplet_map(triplet_logit, batch["triplet"])
+        self.train_tool_map(tool_logit, batch["tool"].to(torch.int))
+        self.train_target_map(target_logit, batch["target"].to(torch.int))
+        self.train_verb_map(verb_logit, batch["verb"].to(torch.int))
+        self.train_triplet_map(triplet_logit, batch["triplet"].to(torch.int))
         self.log(
             "train/loss",
             loss,
@@ -303,10 +303,10 @@ class TripletAttentionModule(LightningModule):
     def validation_step(self, batch: Any, batch_idx: int):
         loss, tool_logit, target_logit, verb_logit, triplet_logit = self.step(batch)
 
-        self.valid_tool_map(tool_logit, batch["tool"])
-        self.valid_target_map(target_logit, batch["target"])
-        self.valid_verb_map(verb_logit, batch["verb"])
-        self.valid_triplet_map(triplet_logit, batch["triplet"])
+        self.valid_tool_map(tool_logit, batch["tool"].to(torch.int))
+        self.valid_target_map(target_logit, batch["target"].to(torch.int))
+        self.valid_verb_map(verb_logit, batch["verb"].to(torch.int))
+        self.valid_triplet_map(triplet_logit, batch["triplet"].to(torch.int))
 
         self.log(
             "valid/tool_mAP",
