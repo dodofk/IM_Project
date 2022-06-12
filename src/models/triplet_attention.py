@@ -187,12 +187,15 @@ class TripletAttentionModule(LightningModule):
         tool_logit = self.tool_head(tool_info)
 
         attn_output = self.target_tool_attention(
-            feature, tool_seq_info, tool_seq_info, need_weights=False
+            feature[:, -1, :, :],
+            tool_seq_info,
+            tool_seq_info,
+            need_weights=False,
         )
 
         target_logit = self.target_head(attn_output.mean(dim=1))
 
-        ts_feature, _ = self.ts(feature.mean(dim=1))
+        ts_feature, _ = self.ts(feature.mean(dim=2))
         verb_logit = self.verb_head((ts_feature[:, -1, :] + tool_info) / 2)
         triplet_logit = self.triplet_head((ts_feature[:, -1, :] + tool_info) / 2)
 
