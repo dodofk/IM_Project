@@ -289,16 +289,17 @@ class TripletAttentionModule(LightningModule):
         return loss
 
     def training_epoch_end(self, outputs: List[Any]):
-        self.train_tool_map.reset()
-        self.train_target_map.reset()
-        self.train_verb_map.reset()
-        self.train_triplet_map.reset()
+        # self.train_tool_map.reset()
+        # self.train_target_map.reset()
+        # self.train_verb_map.reset()
+        # self.train_triplet_map.reset()
         # ivt_result = self.train_recog_metric.compute_global_AP("ivt")
         # pprint(ivt_result["AP"])
         # self.log("train/ivt_mAP", ivt_result["mAP"])
         # self.log("train/i_mAP", self.train_recog_metric.compute_global_AP("i")["mAP"])
         # self.log("train/v_mAP", self.train_recog_metric.compute_global_AP("v")["mAP"])
         # self.log("train/t_mAP", self.train_recog_metric.compute_global_AP("t")["mAP"])
+        pass
 
     def validation_step(self, batch: Any, batch_idx: int):
         loss, tool_logit, target_logit, verb_logit, triplet_logit = self.step(batch)
@@ -349,10 +350,10 @@ class TripletAttentionModule(LightningModule):
         return loss
 
     def validation_epoch_end(self, outputs: List[Any]):
-        self.valid_tool_map.reset()
-        self.valid_target_map.reset()
-        self.valid_verb_map.reset()
-        self.valid_triplet_map.reset()
+        # self.valid_tool_map.reset()
+        # self.valid_target_map.reset()
+        # self.valid_verb_map.reset()
+        # self.valid_triplet_map.reset()
         ivt_result = self.valid_recog_metric.compute_global_AP("ivt")
         pprint(ivt_result["AP"])
         self.log(
