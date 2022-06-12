@@ -117,19 +117,23 @@ class TripletAttentionModule(LightningModule):
                 num_layers=temporal_cfg.num_layers,
                 bidirectional=temporal_cfg.bidirectional,
                 batch_first=True,
+            ),
+            nn.Linear(
+                temporal_cfg.hidden_size * self.temporal_direction(),
+                self.feature_extractor.num_features,
             )
         )
 
         self.verb_head = nn.Sequential(
             nn.Linear(
-                temporal_cfg.hidden_size * self.temporal_direction(),
+                self.feature_extractor.num_features,
                 self.class_num["verb"],
             ),
         )
 
         self.triplet_head = nn.Sequential(
             nn.Linear(
-                temporal_cfg.hidden_size * self.temporal_direction(),
+                self.feature_extractor.num_features,
                 self.class_num["triplet"],
             ),
         )
