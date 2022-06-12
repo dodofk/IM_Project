@@ -265,25 +265,25 @@ class TripletAttentionModule(LightningModule):
             "train/tool_mAP",
             self.train_tool_map,
             on_step=True,
-            on_epoch=False,
+            on_epoch=True,
         )
         self.log(
             "train/verb_mAP",
             self.train_verb_map,
             on_step=True,
-            on_epoch=False,
+            on_epoch=True,
         )
         self.log(
             "train/target_mAP",
             self.train_target_map,
             on_step=True,
-            on_epoch=False,
+            on_epoch=True,
         )
         self.log(
             "train/triplet_mAP",
             self.train_triplet_map,
             on_step=True,
-            on_epoch=False,
+            on_epoch=True,
         )
 
         return loss
@@ -312,25 +312,25 @@ class TripletAttentionModule(LightningModule):
             "valid/tool_mAP",
             self.valid_tool_map,
             on_step=True,
-            on_epoch=False,
+            on_epoch=True,
         )
         self.log(
             "valid/verb_mAP",
             self.valid_verb_map,
             on_step=True,
-            on_epoch=False,
+            on_epoch=True,
         )
         self.log(
             "valid/target_mAP",
             self.valid_target_map,
             on_step=True,
-            on_epoch=False,
+            on_epoch=True,
         )
         self.log(
             "valid/triplet_mAP",
             self.valid_triplet_map,
             on_step=True,
-            on_epoch=False,
+            on_epoch=True,
         )
 
         tool_logit, target_logit, verb_logit, triplet_logit = (
