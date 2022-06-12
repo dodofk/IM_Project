@@ -120,7 +120,7 @@ class TripletAttentionModule(LightningModule):
             ),
         )
 
-        self.ts_dense = nn.Linear(
+        self.ts_fc = nn.Linear(
             temporal_cfg.hidden_size * self.temporal_direction(),
             self.feature_extractor.num_features,
         )
@@ -201,6 +201,7 @@ class TripletAttentionModule(LightningModule):
         target_logit = self.target_head(attn_output.mean(dim=1))
 
         ts_feature, _ = self.ts(feature.mean(dim=2))
+        ts_feature = self.ts_fc(ts_feature)
         verb_logit = self.verb_head((ts_feature[:, -1, :] + tool_info) / 2)
         triplet_logit = self.triplet_head((ts_feature[:, -1, :] + tool_info) / 2)
 
