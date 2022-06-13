@@ -98,6 +98,11 @@ class TripletAttentionModule(LightningModule):
             ),
         )
 
+        self.attention_pre_fc = nn.Linear(
+            self.feature_extractor.num_features,
+            emb_dim,
+        )
+
         self.target_tool_attention = nn.MultiheadAttention(
             embed_dim=emb_dim,
             batch_first=True,
@@ -192,8 +197,10 @@ class TripletAttentionModule(LightningModule):
         tool_info = tool_seq_info.mean(dim=1)
         tool_logit = self.tool_head(tool_info)
 
+        attn_feature = self.attention_pre_fc(feature[:, -1, :, :])
+
         attn_output, _ = self.target_tool_attention(
-            feature[:, -1, :, :],
+            attn_feature,
             tool_seq_info,
             tool_seq_info,
             need_weights=False,
