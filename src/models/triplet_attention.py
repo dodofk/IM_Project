@@ -80,15 +80,10 @@ class TripletAttentionModule(LightningModule):
         self.tool_information = nn.Sequential(
             nn.Linear(
                 self.feature_extractor.num_features,
-                self.feature_extractor.num_features * tool_component.hidden_dim_size,
-            ),
-            getattr(nn, tool_component.activation_fn)(),
-            nn.Dropout(p=tool_component.dropout_ratio),
-            nn.Linear(
-                self.feature_extractor.num_features * tool_component.hidden_dim_size,
                 emb_dim,
             ),
             getattr(nn, tool_component.activation_fn)(),
+            nn.Dropout(p=tool_component.dropout_ratio),
         )
 
         self.tool_head = nn.Sequential(
