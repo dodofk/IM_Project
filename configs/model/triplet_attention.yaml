@@ -16,6 +16,8 @@ tool_component:
 target_tool_attention:
   num_heads: 4
 
+emb_dim: 256
+
 optim:
   optim_name: AdamW
   lr: 0.0002

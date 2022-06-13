@@ -23,6 +23,7 @@ class TripletAttentionModule(LightningModule):
         tool_component: DictConfig,
         target_tool_attention: DictConfig,
         use_pretrained: bool = True,
+        emb_dim: int = 256,
         backbone_model: str = "",
         triplet_map: str = "./data/CholecT45/dict/maps.txt",
     ):
@@ -85,27 +86,27 @@ class TripletAttentionModule(LightningModule):
             nn.Dropout(p=tool_component.dropout_ratio),
             nn.Linear(
                 self.feature_extractor.num_features * tool_component.hidden_dim_size,
-                self.feature_extractor.num_features,
+                emb_dim,
             ),
             getattr(nn, tool_component.activation_fn)(),
         )
 
         self.tool_head = nn.Sequential(
             nn.Linear(
-                self.feature_extractor.num_features,
+                emb_dim,
                 self.class_num["tool"],
             ),
         )
 
         self.target_tool_attention = nn.MultiheadAttention(
-            self.feature_extractor.num_features,
+            embed_dim=emb_dim,
             batch_first=True,
             **target_tool_attention,
         )
 
         self.target_head = nn.Sequential(
             nn.Linear(
-                self.feature_extractor.num_features,
+                emb_dim,
                 self.class_num["target"],
             ),
         )
@@ -122,19 +123,19 @@ class TripletAttentionModule(LightningModule):
 
         self.ts_fc = nn.Linear(
             temporal_cfg.hidden_size * self.temporal_direction(),
-            self.feature_extractor.num_features,
+            emb_dim,
         )
 
         self.verb_head = nn.Sequential(
             nn.Linear(
-                self.feature_extractor.num_features,
+                emb_dim,
                 self.class_num["verb"],
             ),
         )
 
         self.triplet_head = nn.Sequential(
             nn.Linear(
-                self.feature_extractor.num_features,
+                emb_dim,
                 self.class_num["triplet"],
             ),
         )
