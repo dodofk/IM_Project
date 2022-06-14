@@ -5,6 +5,7 @@ import timm
 import torch
 import torch.nn as nn
 from pytorch_lightning import LightningModule
+from torchmetrics import Precision
 import ivtmetrics
 from hydra.utils import get_original_cwd
 import numpy as np
@@ -37,6 +38,31 @@ class TripletBaselineModule(LightningModule):
             "target": 15,
             "triplet": 100,
         }
+
+        self.train_tool_map = Precision(
+            num_classes=self.class_num["tool"], average="macro",
+        )
+        self.train_verb_map = Precision(
+            num_classes=self.class_num["verb"], average="macro",
+        )
+        self.train_target_map = Precision(
+            num_classes=self.class_num["target"], average="macro",
+        )
+        self.train_triplet_map = Precision(
+            num_classes=self.class_num["triplet"], average="macro",
+        )
+        self.valid_tool_map = Precision(
+            num_classes=self.class_num["tool"], average="macro",
+        )
+        self.valid_verb_map = Precision(
+            num_classes=self.class_num["verb"], average="macro",
+        )
+        self.valid_target_map = Precision(
+            num_classes=self.class_num["target"], average="macro",
+        )
+        self.valid_triplet_map = Precision(
+            num_classes=self.class_num["triplet"], average="macro",
+        )
 
         self.feature_extractor = timm.create_model(
             backbone_model,
@@ -195,10 +221,10 @@ class TripletBaselineModule(LightningModule):
             + self.hparams.loss_weight.target_weight * target_loss
             + self.hparams.loss_weight.verb_weight * verb_loss
             + self.hparams.loss_weight.triplet_weight * triplet_loss,
-            tool_logit.detach().cpu().numpy(),
-            target_logit.detach().cpu().numpy(),
-            verb_logit.detach().cpu().numpy(),
-            triplet_logit.detach().cpu().numpy(),
+            tool_logit,
+            target_logit,
+            verb_logit,
+            triplet_logit
         )
 
     def training_step(self, batch: Any, batch_idx: int):
@@ -208,7 +234,35 @@ class TripletBaselineModule(LightningModule):
         #     batch["triplet"].cpu().numpy(),
         #     triplet_logit,
         # )
+        self.train_tool_map(tool_logit, batch["tool"].to(torch.int))
+        self.train_target_map(target_logit, batch["target"].to(torch.int))
+        self.train_verb_map(verb_logit, batch["verb"].to(torch.int))
+        self.train_triplet_map(triplet_logit, batch["triplet"].to(torch.int))
         self.log("train/loss", loss, on_step=True, on_epoch=True, prog_bar=False)
+        self.log(
+            "train/tool_mAP",
+            self.train_tool_map,
+            on_step=True,
+            on_epoch=True,
+        )
+        self.log(
+            "train/verb_mAP",
+            self.train_verb_map,
+            on_step=True,
+            on_epoch=True,
+        )
+        self.log(
+            "train/target_mAP",
+            self.train_target_map,
+            on_step=True,
+            on_epoch=True,
+        )
+        self.log(
+            "train/triplet_mAP",
+            self.train_triplet_map,
+            on_step=True,
+            on_epoch=True,
+        )
 
         return loss
 
@@ -223,6 +277,43 @@ class TripletBaselineModule(LightningModule):
 
     def validation_step(self, batch: Any, batch_idx: int):
         loss, tool_logit, target_logit, verb_logit, triplet_logit = self.step(batch)
+
+        self.valid_tool_map(tool_logit, batch["tool"].to(torch.int))
+        self.valid_target_map(target_logit, batch["target"].to(torch.int))
+        self.valid_verb_map(verb_logit, batch["verb"].to(torch.int))
+        self.valid_triplet_map(triplet_logit, batch["triplet"].to(torch.int))
+
+        self.log(
+            "valid/tool_mAP",
+            self.valid_tool_map,
+            on_step=True,
+            on_epoch=True,
+        )
+        self.log(
+            "valid/verb_mAP",
+            self.valid_verb_map,
+            on_step=True,
+            on_epoch=True,
+        )
+        self.log(
+            "valid/target_mAP",
+            self.valid_target_map,
+            on_step=True,
+            on_epoch=True,
+        )
+        self.log(
+            "valid/triplet_mAP",
+            self.valid_triplet_map,
+            on_step=True,
+            on_epoch=True,
+        )
+
+        tool_logit, target_logit, verb_logit, triplet_logit = (
+            tool_logit.detach().cpu().numpy(),
+            target_logit.detach().cpu().numpy(),
+            verb_logit.detach().cpu().numpy(),
+            triplet_logit.detach().cpu().numpy(),
+        )
 
         self.valid_recog_metric.update(
             batch["triplet"].cpu().numpy(),
@@ -245,6 +336,13 @@ class TripletBaselineModule(LightningModule):
 
     def test_step(self, batch: Any, batch_idx: int):
         loss, tool_logit, target_logit, verb_logit, triplet_logit = self.step(batch)
+
+        tool_logit, target_logit, verb_logit, triplet_logit = (
+            tool_logit.detach().cpu().numpy(),
+            target_logit.detach().cpu().numpy(),
+            verb_logit.detach().cpu().numpy(),
+            triplet_logit.detach().cpu().numpy(),
+        )
 
         post_tool_logit, post_target_logit, post_verb_logit = (
             np.zeros([triplet_logit.shape[0], 100]),
