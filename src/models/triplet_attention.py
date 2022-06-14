@@ -82,7 +82,6 @@ class TripletAttentionModule(LightningModule):
                 self.feature_extractor.num_features,
                 emb_dim,
             ),
-            getattr(nn, tool_component.activation_fn)(),
             nn.Dropout(p=tool_component.dropout_ratio),
         )
 

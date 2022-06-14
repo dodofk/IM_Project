@@ -10,7 +10,6 @@ temporal_cfg:
 
 tool_component:
   hidden_dim_size: 2
-  activation_fn: ReLU
   dropout_ratio: 0.1
 
 target_tool_attention:
