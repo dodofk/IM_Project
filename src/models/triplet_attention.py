@@ -78,7 +78,7 @@ class TripletAttentionModule(LightningModule):
             num_classes=0,
         )
 
-        for p in self.feature_extractor.parameters:
+        for p in self.feature_extractor.parameters():
             p.requires_grad = False
 
         self.tool_information = nn.Sequential(
