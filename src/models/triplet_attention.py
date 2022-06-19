@@ -25,6 +25,7 @@ class TripletAttentionModule(LightningModule):
         use_pretrained: bool = True,
         emb_dim: int = 256,
         backbone_model: str = "",
+        backbone_trainable: bool = True,
         triplet_map: str = "./data/CholecT45/dict/maps.txt",
     ):
         super().__init__()
@@ -76,6 +77,9 @@ class TripletAttentionModule(LightningModule):
             in_chans=3,
             num_classes=0,
         )
+
+        for p in self.feature_extractor.parameters:
+            p.requires_grad = False
 
         self.tool_information = nn.Sequential(
             nn.Linear(

@@ -2,6 +2,8 @@ _target_: src.models.triplet_attention.TripletAttentionModule
 use_pretrained: True
 backbone_model: swin_tiny_patch4_window7_224
 
+backbone_trainable: True
+
 temporal_cfg:
   type: GRU #GRU LSTM RNN
   hidden_size: 512
