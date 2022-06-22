@@ -11,7 +11,7 @@ from hydra.utils import get_original_cwd
 import numpy as np
 from pprint import pprint
 
-assert timm.__version__ == "0.6.2.dev0", "Unsupport timm version"
+# assert timm.__version__ == "0.6.2.dev0", "Unsupport timm version"
 
 
 class TripletAttentionModule(LightningModule):
