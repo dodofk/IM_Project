@@ -11,6 +11,7 @@ from hydra.utils import get_original_cwd
 import numpy as np
 from pprint import pprint
 import json
+import random
 
 # assert timm.__version__ == "0.6.2.dev0", "Unsupport timm version"
 
@@ -354,6 +355,27 @@ class TripletAttentionModule(LightningModule):
         )
         self.log("valid/loss", loss, on_step=True, on_epoch=True, prog_bar=False)
 
+        with open(f'video_x.json', 'r+') as f:
+            data = json.load(f)
+            data[batch['frame']] = {
+                "recognition": triplet_logit,
+                "detection": [
+                    {
+                        "triplet": torch.argmax(triplet_logit, dim=-1), 
+                        "instrument": [
+                            random.randint(0, 5), 
+                            random.randint(0, 256),
+                            random.randint(0, 256),
+                            random.randint(0, 256),
+                            random.randint(0, 256),
+                        ]
+                    }
+                ]
+            }
+            f.seek(0)
+            json.dump(data, f, indent=4)
+            f.truncate()
+
         return loss
 
     def validation_epoch_end(self, outputs: List[Any]):
@@ -407,8 +429,6 @@ class TripletAttentionModule(LightningModule):
         self.valid_target_map(target_logit, batch["target"].to(torch.int))
         self.valid_verb_map(verb_logit, batch["verb"].to(torch.int))
         self.valid_triplet_map(triplet_logit, batch["triplet"].to(torch.int))
-        print(batch["frame"])
-        exit()
 
         return loss
 
