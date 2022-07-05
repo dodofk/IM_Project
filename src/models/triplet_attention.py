@@ -11,8 +11,6 @@ from hydra.utils import get_original_cwd
 import numpy as np
 from pprint import pprint
 
-# assert timm.__version__ == "0.6.2.dev0", "Unsupport timm version"
-
 
 class TripletAttentionModule(LightningModule):
     def __init__(
@@ -201,7 +199,7 @@ class TripletAttentionModule(LightningModule):
             attn_feature,
             tool_seq_info,
             tool_seq_info,
-            need_weights=False,
+            need_weights=True,
         )
 
         target_logit = self.target_head(attn_output.mean(dim=1))
@@ -209,7 +207,7 @@ class TripletAttentionModule(LightningModule):
         ts_feature, _ = self.ts(feature.mean(dim=2))
         ts_feature = self.ts_fc(ts_feature)
         verb_logit = self.verb_head((ts_feature[:, -1, :] + tool_info) / 2)
-        triplet_logit = self.triplet_head((ts_feature[:, -1, :] + tool_info) / 2)
+        triplet_logit = self.triplet_head((ts_feature[:, -1, :] + tool_info + attn_output.mean(dim=1)) / 3)
 
         return tool_logit, target_logit, verb_logit, triplet_logit
 
