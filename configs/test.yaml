@@ -3,10 +3,10 @@
 # specify here default evaluation configuration
 defaults:
   - _self_
-  - datamodule: heichole.yaml # choose the datamodule for evaluation
-  - model: baseline.yaml
-  - callbacks: null
-  - logger: null
+  - datamodule: cholect45.yaml # choose the datamodule for evaluation
+  - model: triplet_attention.yaml
+  - callbacks: default.yaml
+  - logger: wandb.yaml
   - trainer: default.yaml
   - log_dir: evaluation.yaml
 
@@ -29,4 +29,4 @@ seed: null
 name: "default"
 
 # passing checkpoint path is necessary
-ckpt_path: ???
+ckpt_path: ${original_work_dir}/logs/runs/test/last.ckpt

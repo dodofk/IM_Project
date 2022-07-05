@@ -10,6 +10,7 @@ import ivtmetrics
 from hydra.utils import get_original_cwd
 import numpy as np
 from pprint import pprint
+import json
 
 # assert timm.__version__ == "0.6.2.dev0", "Unsupport timm version"
 
@@ -398,6 +399,16 @@ class TripletAttentionModule(LightningModule):
             triplet_logit + 0.4 * post_target_logit + 0.2 * post_verb_logit,
         )
         self.log("test/loss", loss, on_step=True, on_epoch=True, prog_bar=False)
+        self.log("test/i_mAP", self.test_recog_metric.compute_global_AP("i")["mAP"])
+        self.log("test/v_mAP", self.test_recog_metric.compute_global_AP("v")["mAP"])
+        self.log("test/t_mAP", self.test_recog_metric.compute_global_AP("t")["mAP"])
+
+        self.valid_tool_map(tool_logit, batch["tool"].to(torch.int))
+        self.valid_target_map(target_logit, batch["target"].to(torch.int))
+        self.valid_verb_map(verb_logit, batch["verb"].to(torch.int))
+        self.valid_triplet_map(triplet_logit, batch["triplet"].to(torch.int))
+        print(batch["frame"])
+        exit()
 
         return loss
 
