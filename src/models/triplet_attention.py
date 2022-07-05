@@ -1,4 +1,5 @@
 import os
+from tkinter import W
 from typing import Any, List
 from omegaconf import DictConfig
 import timm
@@ -12,6 +13,7 @@ import numpy as np
 from pprint import pprint
 import json
 import random
+import subprocess
 
 # assert timm.__version__ == "0.6.2.dev0", "Unsupport timm version"
 
@@ -355,8 +357,14 @@ class TripletAttentionModule(LightningModule):
         )
         self.log("valid/loss", loss, on_step=True, on_epoch=True, prog_bar=False)
 
+        subprocess.run(["touch", "video_x.json"])
         with open(f'video_x.json', 'r+') as f:
-            data = json.load(f)
+            try:
+                data = json.load(f)
+                
+            except:
+                data = {}
+
             data[batch['frame']] = {
                 "recognition": triplet_logit,
                 "detection": [
@@ -374,7 +382,7 @@ class TripletAttentionModule(LightningModule):
             }
             f.seek(0)
             json.dump(data, f, indent=4)
-            f.truncate()
+            f.truncate()           
 
         return loss
 
