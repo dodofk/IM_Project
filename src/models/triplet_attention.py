@@ -370,10 +370,10 @@ class TripletAttentionModule(LightningModule):
             for i in range(len(batch['frame'])):
 
                 data[batch["frame"][i]] = {
-                    "recognition": triplet_logit.tolist(),
+                    "recognition": triplet_logit.tolist()[i],
                     "detection": [
                         {
-                            "triplet": int(np.argmax(triplet_logit[i], dim=-1)[0]), 
+                            "triplet": int(np.argmax(triplet_logit[i], axis=-1)[0]), 
                             "instrument": [
                                 random.randint(0, 5), 
                                 random.randint(0, 256),
