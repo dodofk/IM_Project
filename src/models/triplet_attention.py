@@ -362,19 +362,19 @@ class TripletAttentionModule(LightningModule):
 
         for i in range(len(batch['frame'])):
 
-            subprocess.run(["touch", f'video_{batch["video"][i]}.json'])
-            with open(f'video_{batch["video"][i]}.json', 'r+') as f:
+            subprocess.run(["touch", f'video_{batch["video"][i][3:]}.json'])
+            with open(f'video_{batch["video"][i][3:]}.json', 'r+') as f:
                 try:
                     data = json.load(f)
                     
                 except:
                     data = {}
 
-                data[batch["frame"][i]] = {
+                data[int(batch["frame"][i])] = {
                     "recognition": triplet_logit.tolist()[i],
                     "detection": [
                         {
-                            "triplet": int(np.argmax(triplet_logit[i], axis=-1)[0]), 
+                            "triplet": int(np.argmax(triplet_logit[i], axis=-1)), 
                             "instrument": [
                                 random.randint(0, 5), 
                                 random.randint(0, 256),
@@ -385,9 +385,9 @@ class TripletAttentionModule(LightningModule):
                         }
                     ]
                 }
-            f.seek(0)
-            json.dump(data, f, indent=4)
-            f.truncate()           
+                f.seek(0)
+                json.dump(data, f, indent=4)
+                f.truncate()           
 
         return loss
 
