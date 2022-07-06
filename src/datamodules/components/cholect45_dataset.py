@@ -107,6 +107,7 @@ class CholecT45Dataset(Dataset):
         verb_label = self.verb_labels[index, 1:]
         target_label = self.target_labels[index, 1:]
         return {
+            "video": os.path.basename(self.img_dir),
             "frame": image_id,
             "image": torch.squeeze(frames, dim=0),
             "verb": verb_label,
@@ -122,6 +123,7 @@ class CholecT45Dataset(Dataset):
 def default_collate_fn(
     inputs: List,
 ) -> Dict:
+    video = [data["video"] for data in inputs]
     frame = [data["frame"] for data in inputs]
     image = torch.stack([data["image"] for data in inputs])
     verb = torch.Tensor([data["verb"] for data in inputs]).to(torch.float)
@@ -129,6 +131,7 @@ def default_collate_fn(
     target = torch.Tensor([data["target"] for data in inputs]).to(torch.float)
     triplet = torch.Tensor([data["triplet"] for data in inputs]).to(torch.float)
     return {
+        "video": video,
         "frame": frame,
         "image": image,
         "verb": verb,
