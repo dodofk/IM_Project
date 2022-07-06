@@ -359,10 +359,10 @@ class TripletAttentionModule(LightningModule):
         )
         self.log("valid/loss", loss, on_step=True, on_epoch=True, prog_bar=False)
 
-        subprocess.run(["touch", "video_x.json"])
 
         for i in range(len(batch['frame'])):
 
+            subprocess.run(["touch", f'video_{batch["video"][i]}.json'])
             with open(f'video_{batch["video"][i]}.json', 'r+') as f:
                 try:
                     data = json.load(f)
