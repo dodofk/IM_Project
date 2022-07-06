@@ -295,7 +295,7 @@ class TripletAttentionModule(LightningModule):
                 self.hparams.loss_weight.tool_weight
                 + self.hparams.loss_weight.target_weight
                 + self.hparams.loss_weight.verb_weight
-                + self.hparams.loss_weihgt.triplet_weight
+                + self.hparams.loss_weight.triplet_weight
             ),
             tool_logit,
             target_logit,
