@@ -25,7 +25,7 @@ class TripletAttentionModule(LightningModule):
         backbone_model: str = "",
         backbone_trainable: bool = True,
         triplet_map: str = "./data/CholecT45/dict/maps.txt",
-        pos_weight: str = "./data/pos_weight.txt",
+        pos_weight_dir: str = "./data/pos_weight",
     ):
         super().__init__()
 
@@ -150,11 +150,23 @@ class TripletAttentionModule(LightningModule):
             ),
         )
 
-        self.triplet_pos_weight = self.contruct_pos_weight()
+        self.triplet_pos_weight = self.contruct_pos_weight(component="triplet")
+        self.tool_pos_weight = self.contruct_pos_weight(component="tool")
+        self.verb_pos_weight = self.contruct_pos_weight(component="verb")
+        self.target_pos_weight = self.contruct_pos_weight(component="target")
 
-        self.criterion = torch.nn.BCEWithLogitsLoss()
-
-        self.triplet_criterion = torch.nn.BCEWithLogitsLoss(pos_weight=self.triplet_pos_weight)
+        self.tool_criterion = torch.nn.BCEWithLogitsLoss(
+            pos_weight=self.tool_pos_weight,
+        )
+        self.verb_criterion = torch.nn.BCEWithLogitsLoss(
+            pos_weight=self.verb_pos_weight
+        )
+        self.target_criterion = torch.nn.BCEWithLogitsLoss(
+            pos_weight=self.target_pos_weight
+        )
+        self.triplet_criterion = torch.nn.BCEWithLogitsLoss(
+            pos_weight=self.triplet_pos_weight
+        )
 
         self.triplet_map = self.contstruct_triplet_map()
 
@@ -165,9 +177,14 @@ class TripletAttentionModule(LightningModule):
         x = torch.randn(1, 3, 224, 224)
         return self.feature_extractor.forward_features(x).shape[1]
 
-    def contruct_pos_weight(self):
+    def contruct_pos_weight(self, component: str = "triplet"):
+        assert component in ["tool", "verb", "target", "triplet"]
         with open(
-            os.path.join(get_original_cwd(), self.hparams.pos_weight),
+            os.path.join(
+                get_original_cwd(),
+                self.hparams.pos_weight_dir,
+                f"{component}_pos_weight.txt",
+            ),
             "r",
         ) as f:
             pos_weight = [int(pos) for pos in f.read().split(",")]
@@ -263,9 +280,9 @@ class TripletAttentionModule(LightningModule):
         tool_logit, target_logit, verb_logit, triplet_logit = self.forward(
             batch["image"]
         )
-        tool_loss = self.criterion(tool_logit, batch["tool"])
-        target_loss = self.criterion(target_logit, batch["target"])
-        verb_loss = self.criterion(verb_logit, batch["verb"])
+        tool_loss = self.tool_criterion(tool_logit, batch["tool"])
+        target_loss = self.target_criterion(target_logit, batch["target"])
+        verb_loss = self.verb_criterion(verb_logit, batch["verb"])
         triplet_loss = self.triplet_criterion(triplet_logit, batch["triplet"])
         return (
             self.hparams.loss_weight.tool_weight * tool_loss
