@@ -25,6 +25,7 @@ class TripletAttentionModule(LightningModule):
         backbone_model: str = "",
         backbone_trainable: bool = True,
         triplet_map: str = "./data/CholecT45/dict/maps.txt",
+        pos_weight: str = "./data/pos_weight.txt",
     ):
         super().__init__()
 
@@ -41,28 +42,36 @@ class TripletAttentionModule(LightningModule):
             "triplet": 100,
         }
         self.train_tool_map = Precision(
-            num_classes=self.class_num["tool"], average="macro",
+            num_classes=self.class_num["tool"],
+            average="macro",
         )
         self.train_verb_map = Precision(
-            num_classes=self.class_num["verb"], average="macro",
+            num_classes=self.class_num["verb"],
+            average="macro",
         )
         self.train_target_map = Precision(
-            num_classes=self.class_num["target"], average="macro",
+            num_classes=self.class_num["target"],
+            average="macro",
         )
         self.train_triplet_map = Precision(
-            num_classes=self.class_num["triplet"], average="macro",
+            num_classes=self.class_num["triplet"],
+            average="macro",
         )
         self.valid_tool_map = Precision(
-            num_classes=self.class_num["tool"], average="macro",
+            num_classes=self.class_num["tool"],
+            average="macro",
         )
         self.valid_verb_map = Precision(
-            num_classes=self.class_num["verb"], average="macro",
+            num_classes=self.class_num["verb"],
+            average="macro",
         )
         self.valid_target_map = Precision(
-            num_classes=self.class_num["target"], average="macro",
+            num_classes=self.class_num["target"],
+            average="macro",
         )
         self.valid_triplet_map = Precision(
-            num_classes=self.class_num["triplet"], average="macro",
+            num_classes=self.class_num["triplet"],
+            average="macro",
         )
 
         assert (
@@ -141,7 +150,11 @@ class TripletAttentionModule(LightningModule):
             ),
         )
 
+        self.triplet_pos_weight = self.contruct_pos_weight()
+
         self.criterion = torch.nn.BCEWithLogitsLoss()
+
+        self.triplet_criterion = torch.nn.BCEWithLogitsLoss(pos_weight=self.triplet_pos_weight)
 
         self.triplet_map = self.contstruct_triplet_map()
 
@@ -151,6 +164,22 @@ class TripletAttentionModule(LightningModule):
         self.feature_extractor.eval()
         x = torch.randn(1, 3, 224, 224)
         return self.feature_extractor.forward_features(x).shape[1]
+
+    def contruct_pos_weight(self):
+        with open(
+            os.path.join(get_original_cwd(), self.hparams.pos_weight),
+            "r",
+        ) as f:
+            pos_weight = [int(pos) for pos in f.read().split(",")]
+
+            weight_sum = sum(pos_weight)
+
+            cal_weight = [0.0] * len(pos_weight)
+
+            for index, pos in enumerate(pos_weight):
+                cal_weight[index] = (weight_sum - pos) / (pos + 1e-5)
+
+            return torch.Tensor(cal_weight)
 
     def contstruct_triplet_map(self):
         with open(os.path.join(get_original_cwd(), self.hparams.triplet_map), "r") as f:
@@ -207,7 +236,9 @@ class TripletAttentionModule(LightningModule):
         ts_feature, _ = self.ts(feature.mean(dim=2))
         ts_feature = self.ts_fc(ts_feature)
         verb_logit = self.verb_head((ts_feature[:, -1, :] + tool_info) / 2)
-        triplet_logit = self.triplet_head((ts_feature[:, -1, :] + tool_info + attn_output.mean(dim=1)) / 3)
+        triplet_logit = self.triplet_head(
+            (ts_feature[:, -1, :] + tool_info + attn_output.mean(dim=1)) / 3
+        )
 
         return tool_logit, target_logit, verb_logit, triplet_logit
 
@@ -235,7 +266,7 @@ class TripletAttentionModule(LightningModule):
         tool_loss = self.criterion(tool_logit, batch["tool"])
         target_loss = self.criterion(target_logit, batch["target"])
         verb_loss = self.criterion(verb_logit, batch["verb"])
-        triplet_loss = self.criterion(triplet_logit, batch["triplet"])
+        triplet_loss = self.triplet_criterion(triplet_logit, batch["triplet"])
         return (
             self.hparams.loss_weight.tool_weight * tool_loss
             + self.hparams.loss_weight.target_weight * target_loss
