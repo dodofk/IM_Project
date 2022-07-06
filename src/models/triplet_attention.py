@@ -153,6 +153,9 @@ class TripletAttentionModule(LightningModule):
 
         self.vit_dim = self.test_dim()
 
+        subprocess.run(["mkdir", "valid"])
+        subprocess.run(["mkdir", "test"])
+
     def test_dim(self):
         self.feature_extractor.eval()
         x = torch.randn(1, 3, 224, 224)
@@ -442,6 +445,35 @@ class TripletAttentionModule(LightningModule):
         self.valid_target_map(target_logit, batch["target"].to(torch.int))
         self.valid_verb_map(verb_logit, batch["verb"].to(torch.int))
         self.valid_triplet_map(triplet_logit, batch["triplet"].to(torch.int))
+
+        for i in range(len(batch['frame'])):
+
+            subprocess.run(["touch", f'video_{batch["video"][i][3:]}.json'])
+            with open(f'video_{batch["video"][i][3:]}.json', 'r+') as f:
+                try:
+                    data = json.load(f)
+                    
+                except:
+                    data = {}
+
+                data[int(batch["frame"][i])] = {
+                    "recognition": triplet_logit.tolist()[i],
+                    "detection": [
+                        {
+                            "triplet": int(np.argmax(triplet_logit[i], axis=-1)), 
+                            "instrument": [
+                                random.randint(0, 5), 
+                                random.randint(0, 256),
+                                random.randint(0, 256),
+                                random.randint(0, 256),
+                                random.randint(0, 256),
+                            ]
+                        }
+                    ]
+                }
+                f.seek(0)
+                json.dump(data, f, indent=4)
+                f.truncate() 
 
         return loss
 
