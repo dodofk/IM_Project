@@ -189,14 +189,14 @@ class TripletAttentionModule(LightningModule):
         ) as f:
             pos_weight = [int(pos) for pos in f.read().split(",")]
 
-            weight_sum = sum(pos_weight)
+        weight_sum = sum(pos_weight)
 
-            cal_weight = [0.0] * len(pos_weight)
+        cal_weight = [0.0] * len(pos_weight)
 
-            for index, pos in enumerate(pos_weight):
-                cal_weight[index] = (weight_sum - pos) / (pos + 1e-5)
+        for index, pos in enumerate(pos_weight):
+            cal_weight[index] = (weight_sum - pos) / (pos + 1e-5)
 
-            return torch.Tensor(cal_weight)
+        return torch.Tensor(cal_weight)
 
     def contstruct_triplet_map(self):
         with open(os.path.join(get_original_cwd(), self.hparams.triplet_map), "r") as f:
@@ -285,10 +285,18 @@ class TripletAttentionModule(LightningModule):
         verb_loss = self.verb_criterion(verb_logit, batch["verb"])
         triplet_loss = self.triplet_criterion(triplet_logit, batch["triplet"])
         return (
-            self.hparams.loss_weight.tool_weight * tool_loss
-            + self.hparams.loss_weight.target_weight * target_loss
-            + self.hparams.loss_weight.verb_weight * verb_loss
-            + self.hparams.loss_weight.triplet_weight * triplet_loss,
+            (
+                self.hparams.loss_weight.tool_weight * tool_loss
+                + self.hparams.loss_weight.target_weight * target_loss
+                + self.hparams.loss_weight.verb_weight * verb_loss
+                + self.hparams.loss_weight.triplet_weight * triplet_loss
+            )
+            / (
+                self.hparams.loss_weight.tool_weight
+                + self.hparams.loss_weight.target_weight
+                + self.hparams.loss_weight.verb_weight
+                + self.hparams.loss_weihgt.triplet_weight
+            ),
             tool_logit,
             target_logit,
             verb_logit,
