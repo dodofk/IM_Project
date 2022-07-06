@@ -360,14 +360,15 @@ class TripletAttentionModule(LightningModule):
         self.log("valid/loss", loss, on_step=True, on_epoch=True, prog_bar=False)
 
         subprocess.run(["touch", "video_x.json"])
-        with open(f'video_{batch["video"][i]}.json', 'r+') as f:
-            try:
-                data = json.load(f)
-                
-            except:
-                data = {}
 
-            for i in range(len(batch['frame'])):
+        for i in range(len(batch['frame'])):
+
+            with open(f'video_{batch["video"][i]}.json', 'r+') as f:
+                try:
+                    data = json.load(f)
+                    
+                except:
+                    data = {}
 
                 data[batch["frame"][i]] = {
                     "recognition": triplet_logit.tolist()[i],
