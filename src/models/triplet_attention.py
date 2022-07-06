@@ -215,7 +215,7 @@ class TripletAttentionModule(LightningModule):
         verb_logit = self.verb_head((ts_feature[:, -1, :] + tool_info) / 2)
         triplet_logit = self.triplet_head((ts_feature[:, -1, :] + tool_info) / 2)
         print(triplet_logit)
-        exit()
+        print(triplet_logit.shape)
 
         return tool_logit, target_logit, verb_logit, triplet_logit
 
@@ -367,13 +367,13 @@ class TripletAttentionModule(LightningModule):
             except:
                 data = {}
 
-            for i in batch['frame']:
+            for i in range(len(batch['frame'])):
 
-                data[i] = {
+                data[batch["frame"][i]] = {
                     "recognition": triplet_logit.tolist(),
                     "detection": [
                         {
-                            "triplet": int(np.argmax(triplet_logit, dim=-1)[0]), 
+                            "triplet": int(np.argmax(triplet_logit[i], dim=-1)[0]), 
                             "instrument": [
                                 random.randint(0, 5), 
                                 random.randint(0, 256),
