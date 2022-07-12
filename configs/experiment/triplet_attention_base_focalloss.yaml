@@ -25,7 +25,7 @@ trainer:
   max_epochs: 50
   gradient_clip_val: 0.5
   gpus: 1
-  precision: 32
+  precision: 16
   accelerator: gpu
   accumulate_grad_batches: 4
 
