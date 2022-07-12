@@ -31,9 +31,9 @@ trainer:
 
 model:
   backbone_model: swin_tiny_patch4_window7_224
-  backbone_trainable: False
+  backbone_trainable: True
   optim:
-    lr: 0.002
+    lr: 0.0002
 
   temporal_cfg:
     type: GRU
@@ -49,6 +49,7 @@ callback:
 datamodule:
   batch_size: 64
   seq_len: 2
+  use_train_aug: False
 
 logger:
   wandb:
