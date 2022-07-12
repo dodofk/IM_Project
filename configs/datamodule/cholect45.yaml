@@ -7,3 +7,4 @@ pin_memory: False
 
 seq_len: 1
 channels: 3
+use_train_aug: True

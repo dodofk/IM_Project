@@ -22,6 +22,7 @@ class TripletBaselineModule(LightningModule):
         # loss_weight: List = None,
         use_timm: bool = False,
         backbone_model: str = "resnet34",
+        backbone_trainable: bool = True,
         triplet_map: str = "./data/CholecT45/dict/maps.txt",
     ):
         super().__init__()
@@ -40,28 +41,36 @@ class TripletBaselineModule(LightningModule):
         }
 
         self.train_tool_map = Precision(
-            num_classes=self.class_num["tool"], average="macro",
+            num_classes=self.class_num["tool"],
+            average="macro",
         )
         self.train_verb_map = Precision(
-            num_classes=self.class_num["verb"], average="macro",
+            num_classes=self.class_num["verb"],
+            average="macro",
         )
         self.train_target_map = Precision(
-            num_classes=self.class_num["target"], average="macro",
+            num_classes=self.class_num["target"],
+            average="macro",
         )
         self.train_triplet_map = Precision(
-            num_classes=self.class_num["triplet"], average="macro",
+            num_classes=self.class_num["triplet"],
+            average="macro",
         )
         self.valid_tool_map = Precision(
-            num_classes=self.class_num["tool"], average="macro",
+            num_classes=self.class_num["tool"],
+            average="macro",
         )
         self.valid_verb_map = Precision(
-            num_classes=self.class_num["verb"], average="macro",
+            num_classes=self.class_num["verb"],
+            average="macro",
         )
         self.valid_target_map = Precision(
-            num_classes=self.class_num["target"], average="macro",
+            num_classes=self.class_num["target"],
+            average="macro",
         )
         self.valid_triplet_map = Precision(
-            num_classes=self.class_num["triplet"], average="macro",
+            num_classes=self.class_num["triplet"],
+            average="macro",
         )
 
         self.feature_extractor = timm.create_model(
@@ -70,6 +79,15 @@ class TripletBaselineModule(LightningModule):
             in_chans=3,
             num_classes=0,
         )
+
+        # swin transformer
+        for p in self.feature_extractor.parameters():
+            p.requires_grad = backbone_trainable
+
+        # swin transformer specific
+        if not backbone_trainable:
+            for p in self.feature_extractor.layers[-1].parameters():
+                p.requires_grad = True
 
         self.bn = nn.BatchNorm1d(
             self.feature_extractor.num_features,
@@ -224,7 +242,7 @@ class TripletBaselineModule(LightningModule):
             tool_logit,
             target_logit,
             verb_logit,
-            triplet_logit
+            triplet_logit,
         )
 
     def training_step(self, batch: Any, batch_idx: int):

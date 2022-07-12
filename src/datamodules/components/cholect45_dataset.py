@@ -26,12 +26,15 @@ class CholecT45Dataset(Dataset):
         tool_file: str = "data/CholecT45/instrument/VID01.txt",
         verb_file: str = "data/CholecT45/verb/VID01.txt",
         target_file: str = "data/CholecT45/target/VID01.txt",
+        use_train_aug: bool = True,
     ) -> None:
 
         assert split in ["train", "dev", "test"], "Invalid split"
 
+        self.split = split
         self.data_dir = data_dir
         self.seq_len = seq_len
+        self.use_train_aug = use_train_aug
 
         self.channels = channels
         self.np_random_seed = np_random_seed
@@ -79,6 +82,12 @@ class CholecT45Dataset(Dataset):
             ]
         )
 
+        self.augment_transform = transforms.Compose(
+            [
+                transforms.TrivialAugmentWide(),
+            ]
+        )
+
     # def sample_label(self, df: pd.DataFrame, base_on: str, sample_num):
     #     return df.groupby(base_on).sample(
     #         n=sample_num,
@@ -100,7 +109,12 @@ class CholecT45Dataset(Dataset):
             basename = "{}.png".format(str(_image_id).zfill(6))
             img_path = os.path.join(get_original_cwd(), self.img_dir, basename)
             image = Image.open(img_path)
+
             image = self.transform(image)
+
+            if self.split == "train" and self.use_train_aug:
+                image = self.augment_transform(image.to(torch.uint8))
+
             frames[i, :, :, :] = image.to(torch.float)
         triplet_label = self.triplet_labels[index, 1:]
         tool_label = self.tool_labels[index, 1:]
@@ -146,6 +160,7 @@ def build_dataloader(
     data_dir: str,
     seq_len: int,
     channels: int,
+    use_train_aug: bool,
 ) -> DataLoader:
     assert split in ["train", "dev", "test"], "Invalid Split"
     iterable_dataset = []
@@ -205,6 +220,7 @@ def build_dataloader(
             data_dir=data_dir,
             seq_len=seq_len,
             channels=channels,
+            use_train_aug=use_train_aug,
         )
         iterable_dataset.append(dataset)
     return DataLoader(
