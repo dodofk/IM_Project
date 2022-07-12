@@ -41,28 +41,36 @@ class TripletBaselineModule(LightningModule):
         }
 
         self.train_tool_map = Precision(
-            num_classes=self.class_num["tool"], average="macro",
+            num_classes=self.class_num["tool"],
+            average="macro",
         )
         self.train_verb_map = Precision(
-            num_classes=self.class_num["verb"], average="macro",
+            num_classes=self.class_num["verb"],
+            average="macro",
         )
         self.train_target_map = Precision(
-            num_classes=self.class_num["target"], average="macro",
+            num_classes=self.class_num["target"],
+            average="macro",
         )
         self.train_triplet_map = Precision(
-            num_classes=self.class_num["triplet"], average="macro",
+            num_classes=self.class_num["triplet"],
+            average="macro",
         )
         self.valid_tool_map = Precision(
-            num_classes=self.class_num["tool"], average="macro",
+            num_classes=self.class_num["tool"],
+            average="macro",
         )
         self.valid_verb_map = Precision(
-            num_classes=self.class_num["verb"], average="macro",
+            num_classes=self.class_num["verb"],
+            average="macro",
         )
         self.valid_target_map = Precision(
-            num_classes=self.class_num["target"], average="macro",
+            num_classes=self.class_num["target"],
+            average="macro",
         )
         self.valid_triplet_map = Precision(
-            num_classes=self.class_num["triplet"], average="macro",
+            num_classes=self.class_num["triplet"],
+            average="macro",
         )
 
         self.feature_extractor = timm.create_model(
@@ -234,7 +242,7 @@ class TripletBaselineModule(LightningModule):
             tool_logit,
             target_logit,
             verb_logit,
-            triplet_logit
+            triplet_logit,
         )
 
     def training_step(self, batch: Any, batch_idx: int):
