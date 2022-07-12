@@ -12,6 +12,7 @@ class CholecT45DataModule(LightningDataModule):
         pin_memory: bool = False,
         seq_len: int = 8,
         channels: int = 3,
+        use_train_aug: bool = True,
     ):
         super().__init__()
 
@@ -27,6 +28,7 @@ class CholecT45DataModule(LightningDataModule):
             data_dir=self.hparams.data_dir,
             seq_len=self.hparams.seq_len,
             channels=self.hparams.channels,
+            use_train_aug=self.hparams.use_train_aug,
         )
 
     def val_dataloader(self) -> DataLoader:
@@ -38,6 +40,7 @@ class CholecT45DataModule(LightningDataModule):
             data_dir=self.hparams.data_dir,
             seq_len=self.hparams.seq_len,
             channels=self.hparams.channels,
+            use_train_aug=self.hparams.use_train_aug,
         )
 
     def test_dataloader(self) -> DataLoader:
@@ -49,6 +52,7 @@ class CholecT45DataModule(LightningDataModule):
             data_dir=self.hparams.data_dir,
             seq_len=self.hparams.seq_len,
             channels=self.hparams.channels,
+            use_train_aug=self.hparams.use_train_aug,
         )
 
     def predict_dataloader(self) -> DataLoader:
