@@ -4,6 +4,7 @@ from omegaconf import DictConfig
 import timm
 import torch
 import torch.nn as nn
+import torch.nn.functional as f
 from pytorch_lightning import LightningModule
 from torchmetrics import Precision
 import ivtmetrics
@@ -25,6 +26,7 @@ class TripletAttentionModule(LightningModule):
         backbone_model: str = "",
         backbone_trainable: bool = True,
         triplet_map: str = "./data/CholecT45/dict/maps.txt",
+        use_pos_weight: bool = True,
         pos_weight_dir: str = "./data/pos_weight",
     ):
         super().__init__()
@@ -183,6 +185,10 @@ class TripletAttentionModule(LightningModule):
 
     def contruct_pos_weight(self, component: str = "triplet"):
         assert component in ["tool", "verb", "target", "triplet"]
+
+        if not self.hparams.use_pos_weight:
+            return torch.ones(self.class_num[component])
+
         with open(
             os.path.join(
                 get_original_cwd(),
@@ -301,10 +307,10 @@ class TripletAttentionModule(LightningModule):
                 + self.hparams.loss_weight.verb_weight
                 + self.hparams.loss_weight.triplet_weight
             ),
-            tool_logit,
-            target_logit,
-            verb_logit,
-            triplet_logit,
+            f.softmax(tool_logit),
+            f.softmax(target_logit),
+            f.softmax(verb_logit),
+            f.softmax(triplet_logit),
         )
 
     def training_step(self, batch: Any, batch_idx: int):

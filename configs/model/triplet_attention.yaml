@@ -34,4 +34,5 @@ loss_weight:
   triplet_weight: 1.25
 
 triplet_map: "./data/CholecT45/dict/maps.txt"
+use_pos_weight: True
 pos_weight_dir: "./data/pos_weight"
