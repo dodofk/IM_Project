@@ -88,6 +88,10 @@ class TripletAttentionModule(LightningModule):
         for p in self.feature_extractor.parameters():
             p.requires_grad = self.hparams.backbone_trainable
 
+        # swin transformer specific
+        for p in self.feature_extractor.layers[-1].parameters():
+            p.requires_grad = True
+
         self.tool_information = nn.Sequential(
             nn.Linear(
                 self.feature_extractor.num_features,
