@@ -22,6 +22,7 @@ class TripletBaselineModule(LightningModule):
         # loss_weight: List = None,
         use_timm: bool = False,
         backbone_model: str = "resnet34",
+        backbone_trainable: bool = True,
         triplet_map: str = "./data/CholecT45/dict/maps.txt",
     ):
         super().__init__()
@@ -70,6 +71,15 @@ class TripletBaselineModule(LightningModule):
             in_chans=3,
             num_classes=0,
         )
+
+        # swin transformer
+        for p in self.feature_extractor.parameters():
+            p.requires_grad = backbone_trainable
+
+        # swin transformer specific
+        if not backbone_trainable:
+            for p in self.feature_extractor.layers[-1].parameters():
+                p.requires_grad = True
 
         self.bn = nn.BatchNorm1d(
             self.feature_extractor.num_features,
