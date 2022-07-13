@@ -84,7 +84,7 @@ class CholecT45Dataset(Dataset):
 
         self.augment_transform = transforms.Compose(
             [
-                transforms.TrivialAugmentWide(),
+                transforms.AutoAugment(),
             ]
         )
 
