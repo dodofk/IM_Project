@@ -2,18 +2,22 @@ import os
 import torch
 import json
 import hydra
+import numpy as np
 from hydra.utils import get_original_cwd
 from statistics import stdev, mean
 from torch.utils.data import DataLoader
+from torch.nn.functional import softmax
 from tqdm import tqdm
+import ivtmetrics
 
+from torchmetrics import Precision
+from pprint import pprint
 from src.datamodules.components.cholect45_dataset import (
     CholecT45Dataset,
     default_collate_fn,
 )
 from src.models.cholec_baseline_module import TripletBaselineModule
-from torchmetrics import Precision
-from pprint import pprint
+
 
 VALIDATION_VIDEOS = ["78", "43", "62", "35", "74", "01", "56", "04", "13"]
 
@@ -72,21 +76,52 @@ def validation(args):
             num_classes=model.class_num["target"],
             average="macro",
         )
+        ivt_metric = ivtmetrics.Recognition(num_class=100)
 
         with torch.no_grad():
             for batch in tqdm(dataloader):
-                tool_logit, target_logit, verb_logit, triplet_logit = model(batch["image"].to(args.device))
+                tool_logit, target_logit, verb_logit, triplet_logit = model(
+                    batch["image"].to(args.device)
+                )
 
                 triplet_map(triplet_logit.to("cpu"), batch["triplet"].to(torch.int))
                 tool_map(tool_logit.to("cpu"), batch["tool"].to(torch.int))
                 verb_map(verb_logit.to("cpu"), batch["verb"].to(torch.int))
                 target_map(target_logit.to("cpu"), batch["target"].to(torch.int))
 
+                tool_logit, target_logit, verb_logit, triplet_logit = (
+                    softmax(tool_logit).detach().cpu().numpy(),
+                    softmax(target_logit).detach().cpu().numpy(),
+                    softmax(verb_logit).detach().cpu().numpy(),
+                    softmax(triplet_logit).detach().cpu().numpy(),
+                )
+
+                post_tool_logit, post_target_logit, post_verb_logit = (
+                    np.zeros([triplet_logit.shape[0], 100]),
+                    np.zeros([triplet_logit.shape[0], 100]),
+                    np.zeros([triplet_logit.shape[0], 100]),
+                )
+
+                for i in range(triplet_logit.shape[0]):
+                    for index, _triplet in enumerate(model.triplet_map):
+                        post_tool_logit[i][index] = tool_logit[i][_triplet[1]]
+                        post_verb_logit[i][index] = verb_logit[i][_triplet[2]]
+                        post_target_logit[i][index] = target_logit[i][_triplet[3]]
+
+                ivt_metric.update(
+                    batch["triplet"].cpu().numpy(),
+                    triplet_logit + 0.4 * post_target_logit + 0.6 * post_verb_logit,
+                )
+
         valid_record[video] = {
             "triplet": triplet_map.compute().item(),
             "tool": tool_map.compute().item(),
             "verb": verb_map.compute().item(),
             "target": target_map.compute().item(),
+            "i_mAP": ivt_metric.compute_global_AP("i")["mAP"],
+            "v_mAP": ivt_metric.compute_global_AP("i")["mAP"],
+            "t_mAP": ivt_metric.compute_global_AP("v")["mAP"],
+            "ivt_mAP": ivt_metric.compute_global_AP("t")["mAP"],
         }
 
     valid_record["overall"] = {
@@ -105,6 +140,22 @@ def validation(args):
         "target": {
             "mean": mean([record["target"] for record in valid_record.values()]),
             "stdev": stdev([record["target"] for record in valid_record.values()]),
+        },
+        "i_mAP": {
+            "mean": mean([record["i_mAP"] for record in valid_record.values()]),
+            "stdev": stdev([record["i_mAP"] for record in valid_record.values()]),
+        },
+        "v_mAP": {
+            "mean": mean([record["v_mAP"] for record in valid_record.values()]),
+            "stdev": stdev([record["v_mAP"] for record in valid_record.values()]),
+        },
+        "t_mAP": {
+            "mean": mean([record["t_mAP"] for record in valid_record.values()]),
+            "stdev": stdev([record["t_mAP"] for record in valid_record.values()]),
+        },
+        "ivt_mAP": {
+            "mean": mean([record["ivt_mAP"] for record in valid_record.values()]),
+            "stdev": stdev([record["ivt_mAP"] for record in valid_record.values()]),
         },
     }
 

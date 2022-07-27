@@ -148,10 +148,10 @@ def default_collate_fn(
 ) -> Dict:
     frame = [data["frame"] for data in inputs]
     image = torch.stack([data["image"] for data in inputs])
-    verb = torch.Tensor([data["verb"] for data in inputs]).to(torch.float)
-    tool = torch.Tensor([data["tool"] for data in inputs]).to(torch.float)
-    target = torch.Tensor([data["target"] for data in inputs]).to(torch.float)
-    triplet = torch.Tensor([data["triplet"] for data in inputs]).to(torch.float)
+    verb = torch.Tensor(np.array([data["verb"] for data in inputs])).to(torch.float)
+    tool = torch.Tensor(np.array([data["tool"] for data in inputs])).to(torch.float)
+    target = torch.Tensor(np.array([data["target"] for data in inputs])).to(torch.float)
+    triplet = torch.Tensor(np.array([data["triplet"] for data in inputs])).to(torch.float)
     return {
         "frame": frame,
         "image": image,
