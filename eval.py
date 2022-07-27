@@ -16,17 +16,19 @@ from torchmetrics import Precision
 from pprint import pprint
 
 VALIDATION_VIDEOS = ["78", "43", "62", "35", "74", "1", "56", "4", "13"]
-data_dir = os.path.join(get_original_cwd(), "data/CholecT45/")
 
 
 @hydra.main(config_path="configs/", config_name="eval.yaml")
 def validation(args):
+    data_dir = os.path.join(get_original_cwd(), "data/CholecT45/")
     device = args.device if torch.cuda.is_available() else "cpu"
 
     valid_record = dict()
 
     print("---- Loading Model ----")
-    model = TripletBaselineModule.load_from_checkpoint(os.path.join(get_original_cwd(), args.ckpt_path)).to(device)
+    model = TripletBaselineModule.load_from_checkpoint(
+        os.path.join(get_original_cwd(), args.ckpt_path)
+    ).to(device)
     model.eval()
     print("---- Finish Loading ----")
 
@@ -43,7 +45,9 @@ def validation(args):
             seq_len=2,
             channels=3,
             use_train_aug=False,
-            triplet_class_arg=os.path.join(get_original_cwd(), "data/triplet_class_arg.npy"),
+            triplet_class_arg=os.path.join(
+                get_original_cwd(), "data/triplet_class_arg.npy"
+            ),
         )
         dataloader = DataLoader(
             dataset,
