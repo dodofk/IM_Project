@@ -51,7 +51,7 @@ def validation(args):
         )
         dataloader = DataLoader(
             dataset,
-            batch_size=args.batch_szie,
+            batch_size=args.batch_size,
             collate_fn=default_collate_fn,
             num_workers=0,
             shuffle=False,
