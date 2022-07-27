@@ -1,8 +1,8 @@
 import os
 import torch
-import argparse
 import json
 import hydra
+from hydra.utils import get_original_cwd
 from statistics import stdev, mean
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -16,7 +16,7 @@ from torchmetrics import Precision
 from pprint import pprint
 
 VALIDATION_VIDEOS = ["78", "43", "62", "35", "74", "1", "56", "4", "13"]
-data_dir = "data/CholecT45/"
+data_dir = os.path.join(get_original_cwd(), "data/CholecT45/")
 
 
 @hydra.main(config_path="configs/", config_name="eval.yaml")
@@ -26,7 +26,7 @@ def validation(args):
     valid_record = dict()
 
     print("---- Loading Model ----")
-    model = TripletBaselineModule.load_from_checkpoint(args.ckpt_path).to(device)
+    model = TripletBaselineModule.load_from_checkpoint(os.path.join(get_original_cwd(), args..ckpt_path)).to(device)
     model.eval()
     print("---- Finish Loading ----")
 
@@ -43,7 +43,7 @@ def validation(args):
             seq_len=2,
             channels=3,
             use_train_aug=False,
-            triplet_class_arg="data/triplet_class_arg.npy",
+            triplet_class_arg=os.path.join(get_original_cwd(), "data/triplet_class_arg.npy"),
         )
         dataloader = DataLoader(
             dataset,
@@ -104,7 +104,7 @@ def validation(args):
         },
     }
 
-    with open(args.output_fname, "w") as f:
+    with open(os.path.join(get_original_cwd(), args.output_fname), "w") as f:
         json.dump(valid_record, f, sort_keys=True, indent=4)
 
     pprint(valid_record)
