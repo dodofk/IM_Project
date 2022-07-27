@@ -53,10 +53,13 @@ def validation(cfg):
 
     valid_record = dict()
 
+    print("---- Loading Model ----")
     model = TripletBaselineModule.load_from_checkpoint(args.ckpt_path).to(device)
     model.eval()
+    print("---- Finish Loading ----")
 
     for video in VALIDATION_VIDEOS:
+        print(f"Video: {video}")
         dataset = CholecT45Dataset(
             img_dir=os.path.join(data_dir, "data", video),
             triplet_file=os.path.join(data_dir, "triplet", "{}.txt".format(video)),
