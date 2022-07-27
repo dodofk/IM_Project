@@ -90,10 +90,10 @@ def validation(args):
                 target_map(target_logit.to("cpu"), batch["target"].to(torch.int))
 
                 tool_logit, target_logit, verb_logit, triplet_logit = (
-                    softmax(tool_logit).detach().cpu().numpy(),
-                    softmax(target_logit).detach().cpu().numpy(),
-                    softmax(verb_logit).detach().cpu().numpy(),
-                    softmax(triplet_logit).detach().cpu().numpy(),
+                    softmax(tool_logit, dim=-1).detach().cpu().numpy(),
+                    softmax(target_logit, dim=-1).detach().cpu().numpy(),
+                    softmax(verb_logit, dim=-1).detach().cpu().numpy(),
+                    softmax(triplet_logit, dim=-1).detach().cpu().numpy(),
                 )
 
                 post_tool_logit, post_target_logit, post_verb_logit = (
