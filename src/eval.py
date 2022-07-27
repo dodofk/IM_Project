@@ -4,11 +4,13 @@ import argparse
 import json
 import hydra
 from statistics import stdev, mean
-from pathlib import Path
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from datamodules.components.cholect45_dataset import CholecT45Dataset, default_collate_fn
+from datamodules.components.cholect45_dataset import (
+    CholecT45Dataset,
+    default_collate_fn,
+)
 from models.cholec_baseline_module import TripletBaselineModule
 from torchmetrics import Precision
 from pprint import pprint
@@ -17,42 +19,8 @@ VALIDATION_VIDEOS = ["78", "43", "62", "35", "74", "1", "56", "4", "13"]
 data_dir = "data/CholecT45/"
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(
-        description="eval for video based mean and stdev",
-    )
-    parser.add_argument(
-        "--ckpt_path",
-        type=Path,
-        required=True,
-        help="path to checkpoint file",
-    )
-    parser.add_argument(
-        "--output_fname",
-        type=str,
-        required=True,
-        help="path to eval result file",
-    )
-    parser.add_argument(
-        "--device",
-        type=str,
-        default="cuda",
-        choices=["cuda", "cpu"],
-        help="device for validation"
-    )
-    parser.add_argument(
-        "--batch_size",
-        type=int,
-        default=64,
-        help="batch size for validaiton",
-    )
-    args = parser.parse_args()
-    return args
-
-
-@hydra.main(config_path="configs/")
-def validation(cfg, args):
-
+@hydra.main(config_path="configs/", config_name="eval.yaml")
+def validation(args):
     device = args.device if torch.cuda.is_available() else "cpu"
 
     valid_record = dict()
@@ -114,9 +82,8 @@ def validation(cfg, args):
             "triplet": triplet_map.compute().item(),
             "tool": tool_map.compute().item(),
             "verb": verb_map.compute().item(),
-            "target": target_map.compute().item()
+            "target": target_map.compute().item(),
         }
-
 
     valid_record["overall"] = {
         "triplet": {
@@ -144,13 +111,4 @@ def validation(cfg, args):
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    validation(args=args)
-
-
-
-
-
-
-
-
+    validation()

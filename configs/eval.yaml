@@ -1,0 +1,4 @@
+ckpt_path: ???
+output_fname: ???
+device: "cuda"
+batch_size: 64
