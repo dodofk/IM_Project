@@ -26,7 +26,7 @@ def validation(args):
     valid_record = dict()
 
     print("---- Loading Model ----")
-    model = TripletBaselineModule.load_from_checkpoint(os.path.join(get_original_cwd(), args..ckpt_path)).to(device)
+    model = TripletBaselineModule.load_from_checkpoint(os.path.join(get_original_cwd(), args.ckpt_path)).to(device)
     model.eval()
     print("---- Finish Loading ----")
 
