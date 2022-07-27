@@ -35,6 +35,8 @@ def validation(args):
     ).to(device)
     model.eval()
     print("---- Finish Loading ----")
+    global_ivt_metric = ivtmetrics.Recognition(num_class=100)
+    global_ivt_metric.reset_global()
 
     for video in VALIDATION_VIDEOS:
         print(f"Video: {video}")
@@ -108,9 +110,14 @@ def validation(args):
                         post_verb_logit[i][index] = verb_logit[i][_triplet[2]]
                         post_target_logit[i][index] = target_logit[i][_triplet[3]]
 
+                combined_triplet_logit = triplet_logit + 0.4 * post_target_logit + 0.6 * post_verb_logit
                 ivt_metric.update(
                     batch["triplet"].cpu().numpy(),
-                    triplet_logit + 0.4 * post_target_logit + 0.6 * post_verb_logit,
+                    combined_triplet_logit,
+                )
+                global_ivt_metric.update(
+                    batch["triplet"].cpu().numpy(),
+                    combined_triplet_logit,
                 )
 
         valid_record[video] = {
@@ -123,6 +130,7 @@ def validation(args):
             "t_mAP": ivt_metric.compute_global_AP("v")["mAP"],
             "ivt_mAP": ivt_metric.compute_global_AP("t")["mAP"],
         }
+        global_ivt_metric.video_end()
 
     valid_record["overall"] = {
         "triplet": {
@@ -157,6 +165,11 @@ def validation(args):
             "mean": mean([record["ivt_mAP"] for record in valid_record.values()]),
             "stdev": stdev([record["ivt_mAP"] for record in valid_record.values()]),
         },
+        "g_i_mAP": global_ivt_metric.compute_global_AP("i")["mAP"],
+        "g_v_mAP": global_ivt_metric.compute_global_AP("v")["mAP"],
+        "g_t_mAP": global_ivt_metric.compute_global_AP("t")["mAP"],
+        "g_ivt_mAP": global_ivt_metric.compute_global_AP("ivt")["mAP"],
+        "g_ivt_detail": global_ivt_metric.compute_global_AP("ivt")["AP"],
     }
 
     with open(os.path.join(get_original_cwd(), args.output_fname), "w") as f:
