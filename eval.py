@@ -75,12 +75,12 @@ def validation(args):
 
         with torch.no_grad():
             for batch in tqdm(dataloader):
-                tool_logit, target_logit, verb_logit, triplet_logit = model(batch["image"])
+                tool_logit, target_logit, verb_logit, triplet_logit = model(batch["image"].to(args.device))
 
-                triplet_map(triplet_logit, batch["triplet"].to(torch.int))
-                tool_map(tool_logit, batch["tool"].to(torch.int))
-                verb_map(verb_logit, batch["verb"].to(torch.int))
-                target_map(target_logit, batch["target"].to(torch.int))
+                triplet_map(triplet_logit.to("cpu"), batch["triplet"].to(torch.int))
+                tool_map(tool_logit.to("cpu"), batch["tool"].to(torch.int))
+                verb_map(verb_logit.to("cpu"), batch["verb"].to(torch.int))
+                target_map(target_logit.to("cpu"), batch["target"].to(torch.int))
 
         valid_record[video] = {
             "triplet": triplet_map.compute().item(),
