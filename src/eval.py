@@ -129,7 +129,7 @@ valid_record["overall"] = {
 print()
 
 with open(args.output_fname, "w") as f:
-    json.dump(valid_record, f)
+    json.dump(valid_record, f, sort_keys=True, indent=4)
 
 pprint(valid_record)
 
