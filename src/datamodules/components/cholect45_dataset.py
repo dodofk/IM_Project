@@ -26,6 +26,7 @@ class CholecT45Dataset(Dataset):
         tool_file: str = "data/CholecT45/instrument/VID01.txt",
         verb_file: str = "data/CholecT45/verb/VID01.txt",
         target_file: str = "data/CholecT45/target/VID01.txt",
+        triplet_class_arg: str = "data/triplet_class_arg.npy",
         use_train_aug: bool = True,
     ) -> None:
 
@@ -84,9 +85,13 @@ class CholecT45Dataset(Dataset):
 
         self.augment_transform = transforms.Compose(
             [
-                transforms.AutoAugment(),
+                transforms.TrivialAugmentWide(),
+                # transforms.AutoAugment(),
             ]
         )
+
+        with open(triplet_class_arg, "rb") as file:
+            self.triplet_sort_ind = np.load(file)[0:53]
 
     # def sample_label(self, df: pd.DataFrame, base_on: str, sample_num):
     #     return df.groupby(base_on).sample(
@@ -113,9 +118,14 @@ class CholecT45Dataset(Dataset):
             image = self.transform(image)
 
             if self.split == "train" and self.use_train_aug:
-                image = self.augment_transform(image.to(torch.uint8))
+                index = np.where(np.array(self.triplet_labels[index, 1:] == 1))[0]
+
+                for ind in index:
+                    if ind in self.triplet_sort_ind:
+                        image = self.augment_transform(image.to(torch.uint8))
 
             frames[i, :, :, :] = image.to(torch.float)
+
         triplet_label = self.triplet_labels[index, 1:]
         tool_label = self.tool_labels[index, 1:]
         verb_label = self.verb_labels[index, 1:]
@@ -161,6 +171,7 @@ def build_dataloader(
     seq_len: int,
     channels: int,
     use_train_aug: bool,
+    triplet_class_arg: str,
 ) -> DataLoader:
     assert split in ["train", "dev", "test"], "Invalid Split"
     iterable_dataset = []
@@ -221,6 +232,7 @@ def build_dataloader(
             seq_len=seq_len,
             channels=channels,
             use_train_aug=use_train_aug,
+            triplet_class_arg=triplet_class_arg,
         )
         iterable_dataset.append(dataset)
     return DataLoader(

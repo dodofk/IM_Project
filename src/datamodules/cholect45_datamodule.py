@@ -13,6 +13,7 @@ class CholecT45DataModule(LightningDataModule):
         seq_len: int = 8,
         channels: int = 3,
         use_train_aug: bool = True,
+        triplet_class_arg: str = "data/triplet_class_arg.npy",
     ):
         super().__init__()
 
@@ -29,6 +30,7 @@ class CholecT45DataModule(LightningDataModule):
             seq_len=self.hparams.seq_len,
             channels=self.hparams.channels,
             use_train_aug=self.hparams.use_train_aug,
+            triplet_class_arg=self.hparams.triplet_class_arg,
         )
 
     def val_dataloader(self) -> DataLoader:
@@ -41,6 +43,7 @@ class CholecT45DataModule(LightningDataModule):
             seq_len=self.hparams.seq_len,
             channels=self.hparams.channels,
             use_train_aug=self.hparams.use_train_aug,
+            triplet_class_arg=self.hparams.triplet_class_arg,
         )
 
     def test_dataloader(self) -> DataLoader:
@@ -53,6 +56,7 @@ class CholecT45DataModule(LightningDataModule):
             seq_len=self.hparams.seq_len,
             channels=self.hparams.channels,
             use_train_aug=self.hparams.use_train_aug,
+            triplet_class_arg=self.hparams.triplet_class_arg,
         )
 
     def predict_dataloader(self) -> DataLoader:
