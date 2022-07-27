@@ -165,10 +165,10 @@ def validation(args):
             "mean": mean([record["ivt_mAP"] for record in valid_record.values()]),
             "stdev": stdev([record["ivt_mAP"] for record in valid_record.values()]),
         },
-        "g_i_mAP": global_ivt_metric.compute_global_AP("i")["mAP"],
-        "g_v_mAP": global_ivt_metric.compute_global_AP("v")["mAP"],
-        "g_t_mAP": global_ivt_metric.compute_global_AP("t")["mAP"],
-        "g_ivt_mAP": global_ivt_metric.compute_global_AP("ivt")["mAP"],
+        "g_i_mAP": global_ivt_metric.compute_video_AP("i")["mAP"],
+        "g_v_mAP": global_ivt_metric.compute_video_AP("v")["mAP"],
+        "g_t_mAP": global_ivt_metric.compute_video_AP("t")["mAP"],
+        "g_ivt_mAP": global_ivt_metric.compute_video_AP("ivt")["mAP"],
         # "g_ivt_detail": list(global_ivt_metric.compute_global_AP("ivt")["AP"]),
     }
 
