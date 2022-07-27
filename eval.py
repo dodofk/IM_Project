@@ -7,11 +7,11 @@ from statistics import stdev, mean
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from datamodules.components.cholect45_dataset import (
+from src.datamodules.components.cholect45_dataset import (
     CholecT45Dataset,
     default_collate_fn,
 )
-from models.cholec_baseline_module import TripletBaselineModule
+from src.models.cholec_baseline_module import TripletBaselineModule
 from torchmetrics import Precision
 from pprint import pprint
 
