@@ -169,7 +169,7 @@ def validation(args):
         "g_v_mAP": global_ivt_metric.compute_global_AP("v")["mAP"],
         "g_t_mAP": global_ivt_metric.compute_global_AP("t")["mAP"],
         "g_ivt_mAP": global_ivt_metric.compute_global_AP("ivt")["mAP"],
-        "g_ivt_detail": global_ivt_metric.compute_global_AP("ivt")["AP"],
+        # "g_ivt_detail": list(global_ivt_metric.compute_global_AP("ivt")["AP"]),
     }
 
     with open(os.path.join(get_original_cwd(), args.output_fname), "w") as f:
