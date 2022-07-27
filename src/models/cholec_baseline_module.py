@@ -88,8 +88,8 @@ class TripletBaselineModule(LightningModule):
         if not backbone_trainable:
             for p in self.feature_extractor.layers[-1].parameters():
                 p.requires_grad = True
-            for p in self.feature_extractor.layers[-2].parameters():
-                p.requires_grad = True
+            # for p in self.feature_extractor.layers[-2].parameters():
+            #     p.requires_grad = True
 
         self.bn = nn.BatchNorm1d(
             self.feature_extractor.num_features,
