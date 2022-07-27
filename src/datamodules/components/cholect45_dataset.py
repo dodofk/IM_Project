@@ -90,7 +90,7 @@ class CholecT45Dataset(Dataset):
             ]
         )
 
-        with open(triplet_class_arg, "rb") as file:
+        with open(os.path.join(get_original_cwd(), triplet_class_arg), "rb") as file:
             self.triplet_sort_ind = np.load(file)[0:53]
 
     # def sample_label(self, df: pd.DataFrame, base_on: str, sample_num):
