@@ -15,7 +15,7 @@ from src.models.cholec_baseline_module import TripletBaselineModule
 from torchmetrics import Precision
 from pprint import pprint
 
-VALIDATION_VIDEOS = ["78", "43", "62", "35", "74", "1", "56", "4", "13"]
+VALIDATION_VIDEOS = ["78", "43", "62", "35", "74", "01", "56", "04", "13"]
 
 
 @hydra.main(config_path="configs/", config_name="eval.yaml")
@@ -36,10 +36,10 @@ def validation(args):
         print(f"Video: {video}")
         dataset = CholecT45Dataset(
             img_dir=os.path.join(data_dir, "data", video),
-            triplet_file=os.path.join(data_dir, "triplet", "{}.txt".format(video)),
-            tool_file=os.path.join(data_dir, "instrument", "{}.txt".format(video)),
-            verb_file=os.path.join(data_dir, "verb", "{}.txt".format(video)),
-            target_file=os.path.join(data_dir, "target", "{}.txt".format(video)),
+            triplet_file=os.path.join(data_dir, "triplet", "VID{}.txt".format(video)),
+            tool_file=os.path.join(data_dir, "instrument", "VID{}.txt".format(video)),
+            verb_file=os.path.join(data_dir, "verb", "VID{}.txt".format(video)),
+            target_file=os.path.join(data_dir, "target", "VID{}.txt".format(video)),
             split="dev",
             data_dir=data_dir,
             seq_len=2,
