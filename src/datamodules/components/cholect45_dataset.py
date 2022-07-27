@@ -118,9 +118,9 @@ class CholecT45Dataset(Dataset):
             image = self.transform(image)
 
             if self.split == "train" and self.use_train_aug:
-                index = np.where(np.array(self.triplet_labels[index, 1:] == 1))[0]
+                _index = np.where(np.array(self.triplet_labels[index, 1:] == 1))[0]
 
-                for ind in index:
+                for ind in _index:
                     if ind in self.triplet_sort_ind:
                         image = self.augment_transform(image.to(torch.uint8))
 
