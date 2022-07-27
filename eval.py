@@ -75,7 +75,7 @@ def validation(args):
 
         with torch.no_grad():
             for batch in tqdm(dataloader):
-                tool_logit, target_logit, verb_logit, triplet_logit = model(batch)
+                tool_logit, target_logit, verb_logit, triplet_logit = model(batch["image"])
 
                 triplet_map(triplet_logit, batch["triplet"].to(torch.int))
                 tool_map(tool_logit, batch["tool"].to(torch.int))
