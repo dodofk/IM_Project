@@ -17,8 +17,7 @@ VALIDATION_VIDEOS = ["78", "43", "62", "35", "74", "1", "56", "4", "13"]
 data_dir = "data/CholecT45/"
 
 
-@hydra.main(config_path="configs/")
-def validation(cfg):
+def parse_args():
     parser = argparse.ArgumentParser(
         description="eval for video based mean and stdev",
     )
@@ -48,6 +47,11 @@ def validation(cfg):
         help="batch size for validaiton",
     )
     args = parser.parse_args()
+    return args
+
+
+@hydra.main(config_path="configs/")
+def validation(cfg, args):
 
     device = args.device if torch.cuda.is_available() else "cpu"
 
@@ -140,7 +144,8 @@ def validation(cfg):
 
 
 if __name__ == "__main__":
-    validation()
+    args = parse_args()
+    validation(args=args)
 
 
 
