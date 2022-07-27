@@ -35,7 +35,7 @@ def validation(args):
     for video in VALIDATION_VIDEOS:
         print(f"Video: {video}")
         dataset = CholecT45Dataset(
-            img_dir=os.path.join(data_dir, "data", video),
+            img_dir=os.path.join(data_dir, "data", f"VID{video}"),
             triplet_file=os.path.join(data_dir, "triplet", "VID{}.txt".format(video)),
             tool_file=os.path.join(data_dir, "instrument", "VID{}.txt".format(video)),
             verb_file=os.path.join(data_dir, "verb", "VID{}.txt".format(video)),
