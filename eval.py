@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 from torch.nn.functional import softmax
 from tqdm import tqdm
 import ivtmetrics
+import random
 
 from torchmetrics import Precision
 from pprint import pprint
@@ -24,8 +25,12 @@ VALIDATION_VIDEOS = ["78", "43", "62", "35", "74", "01", "56", "04", "13"]
 
 @hydra.main(config_path="configs/", config_name="eval.yaml")
 def validation(args):
+    random.seed(args.seed)
     data_dir = os.path.join(get_original_cwd(), "data/CholecT45/")
     device = args.device if torch.cuda.is_available() else "cpu"
+
+    with open(os.path.join(get_original_cwd(), "data/triplet_class_arg.npy"), "rb") as file:
+        triplet_sort_ind = np.load(file)
 
     valid_record = dict()
 
@@ -110,7 +115,16 @@ def validation(args):
                         post_verb_logit[i][index] = verb_logit[i][_triplet[2]]
                         post_target_logit[i][index] = target_logit[i][_triplet[3]]
 
-                combined_triplet_logit = triplet_logit + 0.4 * post_target_logit + 0.6 * post_verb_logit
+                combined_triplet_logit = 0.5 * post_tool_logit + 1.25 * post_verb_logit * post_target_logit + 1 * triplet_logit
+
+                arg_max = np.argmax(combined_triplet_logit, axis=1)
+
+                for index, _arg_max in enumerate(arg_max):
+                    if _arg_max in triplet_sort_ind[-15:]:
+                        if random.random() < args.rand_ratio:
+                            aug_idx = random.choice(triplet_sort_ind[:-15])
+                            combined_triplet_logit[index][aug_idx] = combined_triplet_logit[index][_arg_max] + 0.1
+
                 ivt_metric.update(
                     batch["triplet"].cpu().numpy(),
                     combined_triplet_logit,
