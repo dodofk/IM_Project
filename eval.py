@@ -126,9 +126,10 @@ def validation(args):
             "verb": verb_map.compute().item(),
             "target": target_map.compute().item(),
             "i_mAP": ivt_metric.compute_global_AP("i")["mAP"],
-            "v_mAP": ivt_metric.compute_global_AP("i")["mAP"],
-            "t_mAP": ivt_metric.compute_global_AP("v")["mAP"],
-            "ivt_mAP": ivt_metric.compute_global_AP("t")["mAP"],
+            "v_mAP": ivt_metric.compute_global_AP("v")["mAP"],
+            "t_mAP": ivt_metric.compute_global_AP("t")["mAP"],
+            "ivt_mAP": ivt_metric.compute_global_AP("ivt")["mAP"],
+            "ivt_detail": list(ivt_metric.compute_global_AP("ivt")["AP"]),
         }
         global_ivt_metric.video_end()
 
@@ -169,7 +170,7 @@ def validation(args):
         "g_v_mAP": global_ivt_metric.compute_video_AP("v")["mAP"],
         "g_t_mAP": global_ivt_metric.compute_video_AP("t")["mAP"],
         "g_ivt_mAP": global_ivt_metric.compute_video_AP("ivt")["mAP"],
-        # "g_ivt_detail": list(global_ivt_metric.compute_global_AP("ivt")["AP"]),
+        "g_ivt_detail": list(global_ivt_metric.compute_global_AP("ivt")["AP"]),
     }
 
     with open(os.path.join(get_original_cwd(), args.output_fname), "w") as f:
