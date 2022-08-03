@@ -125,7 +125,7 @@ def validation(args):
                             if random.random() < args.rand_ratio:
                                 for max_idx in triplet_sort_ind[-7:]:
                                     combined_triplet_logit[index][max_idx] = 0
-                                randn_idx = random.choice(triplet_sort_ind[5:-30])
+                                randn_idx = random.choice(triplet_sort_ind[5:40])
                                 combined_triplet_logit[index][randn_idx] = 15
 
                 ivt_metric.update(
