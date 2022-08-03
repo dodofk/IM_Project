@@ -123,7 +123,7 @@ def validation(args):
                     for index, _arg_max in enumerate(arg_max):
                         if _arg_max in triplet_sort_ind[-15:]:
                             if random.random() < args.rand_ratio:
-                                aug_idx = random.choice(triplet_sort_ind[:-15])
+                                aug_idx = random.choice(triplet_sort_ind[50:-15])
                                 combined_triplet_logit[index][aug_idx] = combined_triplet_logit[index][_arg_max] + 0.1
 
                 ivt_metric.update(
