@@ -1,5 +1,6 @@
 from typing import List, Dict
 import os
+import random
 
 import numpy as np
 
@@ -7,6 +8,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset, ConcatDataset
 
 from PIL import Image
+import torchvision.transforms.functional as tfunc
 from torchvision import transforms
 
 import hydra
@@ -110,6 +112,9 @@ class CholecT45Dataset(Dataset):
 
         frames = torch.FloatTensor(self.seq_len, self.channels, 224, 224)
 
+        angle = random.choice([-30, -20, -15, -5, 0, 5, 15, 20, 30])
+        angle_aug = random.randint(-5, 5)
+
         for i, _image_id in enumerate(numbers):
             basename = "{}.png".format(str(_image_id).zfill(6))
             img_path = os.path.join(get_original_cwd(), self.img_dir, basename)
@@ -118,11 +123,13 @@ class CholecT45Dataset(Dataset):
             image = self.transform(image)
 
             if self.split == "train" and self.use_train_aug:
-                _index = np.where(np.array(self.triplet_labels[index, 1:] == 1))[0]
-
-                for ind in _index:
-                    if ind in self.triplet_sort_ind:
-                        image = self.augment_transform(image.to(torch.uint8))
+                image = tfunc.rotate(image, angle)
+                angle += angle_aug
+                # _index = np.where(np.array(self.triplet_labels[index, 1:] == 1))[0]
+                #
+                # for ind in _index:
+                #     if ind in self.triplet_sort_ind:
+                #         image = self.augment_transform(image.to(torch.uint8))
 
             frames[i, :, :, :] = image.to(torch.float)
 
@@ -151,7 +158,9 @@ def default_collate_fn(
     verb = torch.Tensor(np.array([data["verb"] for data in inputs])).to(torch.float)
     tool = torch.Tensor(np.array([data["tool"] for data in inputs])).to(torch.float)
     target = torch.Tensor(np.array([data["target"] for data in inputs])).to(torch.float)
-    triplet = torch.Tensor(np.array([data["triplet"] for data in inputs])).to(torch.float)
+    triplet = torch.Tensor(np.array([data["triplet"] for data in inputs])).to(
+        torch.float
+    )
     return {
         "frame": frame,
         "image": image,
