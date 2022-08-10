@@ -285,7 +285,7 @@ class TripletBaselineModule(LightningModule):
         tool_loss = self.criterion(tool_logit, batch["tool"])
         target_loss = self.criterion(target_logit, batch["target"])
         target_combined_loss = self.criterion(
-            target_combined_logit, self.target_combine_transform(target_combined_logit)
+            target_combined_logit, self.target_combine_transform(batch["target"])
         )
         verb_loss = self.criterion(verb_logit, batch["verb"])
         triplet_loss = self.criterion(triplet_logit, batch["triplet"])
@@ -383,7 +383,7 @@ class TripletBaselineModule(LightningModule):
         self.valid_triplet_map(triplet_logit, batch["triplet"].to(torch.int))
         self.valid_target_combined_map(
             target_combined_logit,
-            self.target_combine_transform(target_combined_logit).to(torch.int),
+            self.target_combine_transform(batch["target"]).to(torch.int),
         )
 
         self.log(
