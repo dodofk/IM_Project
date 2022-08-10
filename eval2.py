@@ -339,19 +339,19 @@ def testtest(args):
                         truth_t_lst.append(str(model.triplet_map[int(trip_id)][3]))
 
                 # logit i, v, t, predictions analysis
-                if not pred_tool_index[i] in truth_i_lst:
+                if not str(pred_tool_index[i]) in truth_i_lst:
                     for truth_i in truth_i_lst:
                         wrong_i_key = f'{i_map[truth_i]} --> {i_map[str(pred_tool_index[i])]}'
                         if not wrong_i_key in wrong_logit_i.keys():
                             wrong_logit_i[wrong_i_key] = 0
                         wrong_logit_i[wrong_i_key] += 1
-                if not pred_verb_index[i] in truth_v_lst:
+                if not str(pred_verb_index[i]) in truth_v_lst:
                     for truth_v in truth_v_lst:
                         wrong_v_key = f'{v_map[truth_v]} --> {v_map[str(pred_verb_index[i])]}'
                         if not wrong_v_key in wrong_logit_v.keys():
                             wrong_logit_v[wrong_v_key] = 0
                         wrong_logit_v[wrong_v_key] += 1
-                if not pred_target_index[i] in truth_t_lst:
+                if not str(pred_target_index[i]) in truth_t_lst:
                     for truth_t in truth_t_lst:
                         wrong_t_key = f'{t_map[truth_t]} --> {t_map[str(pred_target_index[i])]}'
                         if not wrong_t_key in wrong_logit_t.keys():
