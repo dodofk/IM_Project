@@ -14,6 +14,7 @@ from torchvision import transforms
 import hydra
 from hydra.utils import get_original_cwd
 
+VALIDATION_VIDEOS = ["78", "43", "62", "35", "74", "01", "56", "04", "13"]
 
 class CholecT45Dataset(Dataset):
     def __init__(
@@ -256,10 +257,32 @@ def build_dataloader(
 
 @hydra.main(config_path=None)
 def test_dataset(cfg) -> None:
-    dataset = CholecT45Dataset(
-        # split="fine-tune",
-    )
-    print(dataset.__getitem__(3000))
+    triplet_counter = {}
+
+
+    for num in VALIDATION_VIDEOS:
+        print(f'processing video {num}...'.ljust(50), end='\r')
+        dataset = CholecT45Dataset(
+            img_dir = f"data/CholecT45/data/VID{num.zfill(2)}",
+            triplet_file = f"data/CholecT45/triplet/VID{num.zfill(2)}.txt",
+            tool_file = f"data/CholecT45/instrument/VID{num.zfill(2)}.txt",
+            verb_file = f"data/CholecT45/verb/VID{num.zfill(2)}.txt",
+            target_file = f"data/CholecT45/target/VID{num.zfill(2)}.txt",
+        )
+        for i in range(len(dataset)):
+            arr = dataset.__getitem__(i)['triplet']
+            labels = []
+            for j in range(len(arr)):
+                if arr[j]:
+                    labels.append(j)
+
+            for label in labels:
+                if not str(label) in triplet_counter.keys():
+                    triplet_counter[str(label)] = 0
+                triplet_counter[str(label)] += 1
+
+    for k, v in sorted(triplet_counter.items(), key=lambda x: x[1]):
+        print(f'triplet {k.zfill(2)}:  {str(v).zfill(4)}')
 
 
 if __name__ == "__main__":

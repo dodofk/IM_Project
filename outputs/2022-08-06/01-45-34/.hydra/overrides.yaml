@@ -1,0 +1,2 @@
+- ckpt_path=logs/experiments/runs/cholect45_basic_andy/2022-08-02_14-20-24/checkpoints/epoch_009.ckpt
+- output_fname=andytest1.json
