@@ -258,12 +258,13 @@ def testtest(args):
     global_ivt_metric = ivtmetrics.Recognition(num_class=100)
     global_ivt_metric.reset_global()
     
-
+    wrong_logit_i, wrong_logit_v, wrong_logit_t = {}, {}, {}
     wrong_pred_i, wrong_pred_v, wrong_pred_t = {}, {}, {}
 
     # for testing purposes only
     # video = VALIDATION_VIDEOS[0]
     for video in tqdm(VALIDATION_VIDEOS):
+        print(f'Processing video {video}...'.ljust(50), end='\r')
         data_dir = os.path.join(get_original_cwd(), "data/CholecT45/")
         dataset = CholecT45Dataset(
                 img_dir=os.path.join(data_dir, "data", f"VID{video}"),
@@ -300,8 +301,9 @@ def testtest(args):
                 softmax(verb_logit, dim=-1).detach().cpu().numpy(),
                 softmax(triplet_logit, dim=-1).detach().cpu().numpy(),
             )
-            pred_tool_index, pred_target_index, pred_triplet_index = (
+            pred_tool_index, pred_verb_index, pred_target_index, pred_triplet_index = (
                 np.argmax(tool_logit, axis=1),
+                np.argmax(verb_logit, axis=1),
                 np.argmax(target_logit, axis=1),
                 np.argmax(triplet_logit, axis=1)
             )
@@ -327,43 +329,74 @@ def testtest(args):
 
             for i, arr in enumerate(batch['triplet']):
                 truth_triplet_indexs = [str(j) for j in range(len(arr)) if arr[j] == 1]
+                truth_i_lst, truth_v_lst, truth_t_lst = [], [], []
 
-                for id in truth_triplet_indexs:
-                    # only check minority class
-                    if id in MINORITY_CLASSES:
-                        truth_i_lst, truth_v_lst, truth_t_lst = [], [], []
-                        for index in truth_triplet_indexs:
-                            truth_i_lst.append(str(model.triplet_map[int(index)][1]))
-                            truth_v_lst.append(str(model.triplet_map[int(index)][2]))
-                            truth_t_lst.append(str(model.triplet_map[int(index)][3]))
+                # finding truth triplet corresponding i, v, t (only miniority triplet)
+                for trip_id in truth_triplet_indexs:
+                    if trip_id in MINORITY_CLASSES:
+                        truth_i_lst.append(str(model.triplet_map[int(trip_id)][1]))
+                        truth_v_lst.append(str(model.triplet_map[int(trip_id)][2]))
+                        truth_t_lst.append(str(model.triplet_map[int(trip_id)][3]))
 
-                        
-
-                        mix_pred_i, mix_pred_v, mix_pred_t = (
-                            str(model.triplet_map[int(mix_pred_triplet_index[i])][1]),
-                            str(model.triplet_map[int(mix_pred_triplet_index[i])][2]),
-                            str(model.triplet_map[int(mix_pred_triplet_index[i])][3]),
-                        )
-
-                        if not mix_pred_i in truth_i_lst:
-                            for truth_i in truth_i_lst:
-                                wrong_i_key = f'{i_map[truth_i]} --> {i_map[mix_pred_i]}'
-                                if not wrong_i_key in wrong_pred_i.keys():
-                                    wrong_pred_i[wrong_i_key] = 0
-                                wrong_pred_i[wrong_i_key] += 1
-                        if not mix_pred_v in truth_v_lst:
-                            for truth_v in truth_v_lst:
-                                wrong_v_key = f'{v_map[truth_v]} --> {v_map[mix_pred_v]}'
-                                if not wrong_v_key in wrong_pred_v.keys():
-                                    wrong_pred_v[wrong_v_key] = 0
-                                wrong_pred_v[wrong_v_key] += 1
-                        if not mix_pred_t in truth_t_lst:
-                            for truth_t in truth_t_lst:
-                                wrong_t_key = f'{t_map[truth_t]} --> {t_map[mix_pred_t]}'
-                                if not wrong_t_key in wrong_pred_t.keys():
-                                    wrong_pred_t[wrong_t_key] = 0
-                                wrong_pred_t[wrong_t_key] += 1
-                    
+                # logit i, v, t, predictions analysis
+                if not pred_tool_index[i] in truth_i_lst:
+                    for truth_i in truth_i_lst:
+                        wrong_i_key = f'{i_map[truth_i]} --> {i_map[str(pred_tool_index[i])]}'
+                        if not wrong_i_key in wrong_logit_i.keys():
+                            wrong_logit_i[wrong_i_key] = 0
+                        wrong_logit_i[wrong_i_key] += 1
+                if not pred_verb_index[i] in truth_v_lst:
+                    for truth_v in truth_v_lst:
+                        wrong_v_key = f'{v_map[truth_v]} --> {v_map[str(pred_verb_index[i])]}'
+                        if not wrong_v_key in wrong_logit_v.keys():
+                            wrong_logit_v[wrong_v_key] = 0
+                        wrong_logit_v[wrong_v_key] += 1
+                if not pred_target_index[i] in truth_t_lst:
+                    for truth_t in truth_t_lst:
+                        wrong_t_key = f'{t_map[truth_t]} --> {t_map[str(pred_target_index[i])]}'
+                        if not wrong_t_key in wrong_logit_t.keys():
+                            wrong_logit_t[wrong_t_key] = 0
+                        wrong_logit_t[wrong_t_key] += 1
+                
+                
+                # mix predictions analysis
+                mix_pred_i, mix_pred_v, mix_pred_t = (
+                    str(model.triplet_map[int(mix_pred_triplet_index[i])][1]),
+                    str(model.triplet_map[int(mix_pred_triplet_index[i])][2]),
+                    str(model.triplet_map[int(mix_pred_triplet_index[i])][3]),
+                )
+                if not mix_pred_i in truth_i_lst:
+                    for truth_i in truth_i_lst:
+                        wrong_i_key = f'{i_map[truth_i]} --> {i_map[mix_pred_i]}'
+                        if not wrong_i_key in wrong_pred_i.keys():
+                            wrong_pred_i[wrong_i_key] = 0
+                        wrong_pred_i[wrong_i_key] += 1
+                if not mix_pred_v in truth_v_lst:
+                    for truth_v in truth_v_lst:
+                        wrong_v_key = f'{v_map[truth_v]} --> {v_map[mix_pred_v]}'
+                        if not wrong_v_key in wrong_pred_v.keys():
+                            wrong_pred_v[wrong_v_key] = 0
+                        wrong_pred_v[wrong_v_key] += 1
+                if not mix_pred_t in truth_t_lst:
+                    for truth_t in truth_t_lst:
+                        wrong_t_key = f'{t_map[truth_t]} --> {t_map[mix_pred_t]}'
+                        if not wrong_t_key in wrong_pred_t.keys():
+                            wrong_pred_t[wrong_t_key] = 0
+                        wrong_pred_t[wrong_t_key] += 1
+    print('-------- Logit --------')
+    print('--- Wrong Predicted Instrument ---')
+    for k, v in sorted(wrong_logit_i.items(), key=lambda x: x[1], reverse=True):
+        print(f'{k}: {str(v).zfill(3)}')
+    print()
+    print('--- Wrong Predicted Verb ---')
+    for k, v in sorted(wrong_logit_v.items(), key=lambda x: x[1], reverse=True):
+        print(f'{k}: {str(v).zfill(3)}')
+    print()
+    print('--- Wrong Predicted Target ---')
+    for k, v in sorted(wrong_logit_t.items(), key=lambda x: x[1], reverse=True):
+        print(f'{k}: {str(v).zfill(3)}')
+    print('\n'*2)
+    print('-------- Mix --------')          
     print('--- Wrong Predicted Instrument ---')
     for k, v in sorted(wrong_pred_i.items(), key=lambda x: x[1], reverse=True):
         print(f'{k}: {str(v).zfill(3)}')
