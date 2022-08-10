@@ -123,6 +123,9 @@ def validation(args):
                         target_combined_logit.to("cpu"),
                         model.target_combine_transform(batch["target"]).to(torch.int),
                     )
+                    target_combined_logit = (
+                        softmax(target_combined_logit, dim=-1).detach().cpu().numpy()
+                    )
 
                 tool_logit, target_logit, verb_logit, triplet_logit = (
                     softmax(tool_logit, dim=-1).detach().cpu().numpy(),
@@ -141,7 +144,12 @@ def validation(args):
                     for index, _triplet in enumerate(model.triplet_map):
                         post_tool_logit[i][index] = tool_logit[i][_triplet[1]]
                         post_verb_logit[i][index] = verb_logit[i][_triplet[2]]
-                        post_target_logit[i][index] = target_logit[i][_triplet[3]]
+                        if args.use_combined_logit and args.is_combined:
+                            post_target_logit[i][index] = target_combined_logit[i][
+                                model.target_to_combined_class(_triplet[3])
+                            ]
+                        else:
+                            post_target_logit[i][index] = target_logit[i][_triplet[3]]
 
                 combined_triplet_logit = (
                     0.5 * post_tool_logit
