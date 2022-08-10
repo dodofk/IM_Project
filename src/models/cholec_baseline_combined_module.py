@@ -228,6 +228,11 @@ class TripletBaselineModule(LightningModule):
 
         return new_target
 
+    def target_to_combined_class(self, target_class: int):
+        for _key in self.target_to_combined.keys():
+            if target_class in self.target_to_combined[_key]:
+                return _key
+
     def forward(self, x):
         output_tensor = torch.zeros(
             [x.shape[0], x.shape[1], self.feature_extractor.num_features]
