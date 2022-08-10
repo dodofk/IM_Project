@@ -18,6 +18,9 @@ from src.datamodules.components.cholect45_dataset import (
     default_collate_fn,
 )
 from src.models.cholec_baseline_module import TripletBaselineModule
+from src.models.cholec_baseline_combined_module import (
+    TripletBaselineModule as TripletBaselineCombinedModule,
+)
 
 
 VALIDATION_VIDEOS = ["78", "43", "62", "35", "74", "01", "56", "04", "13"]
@@ -29,15 +32,22 @@ def validation(args):
     data_dir = os.path.join(get_original_cwd(), "data/CholecT45/")
     device = args.device if torch.cuda.is_available() else "cpu"
 
-    with open(os.path.join(get_original_cwd(), "data/triplet_class_arg.npy"), "rb") as file:
+    with open(
+        os.path.join(get_original_cwd(), "data/triplet_class_arg.npy"), "rb"
+    ) as file:
         triplet_sort_ind = np.load(file)
 
     valid_record = dict()
 
     print("---- Loading Model ----")
-    model = TripletBaselineModule.load_from_checkpoint(
-        os.path.join(get_original_cwd(), args.ckpt_path)
-    ).to(device)
+    if args.is_combined:
+        model = TripletBaselineCombinedModule.load_from_checkpoint(
+            os.path.join(get_original_cwd(), args.ckpt_path)
+        ).to(device)
+    else:
+        model = TripletBaselineModule.load_from_checkpoint(
+            os.path.join(get_original_cwd(), args.ckpt_path)
+        ).to(device)
     model.eval()
     print("---- Finish Loading ----")
     global_ivt_metric = ivtmetrics.Recognition(num_class=100)
@@ -83,18 +93,36 @@ def validation(args):
             num_classes=model.class_num["target"],
             average="macro",
         )
+        if args.is_combined:
+            target_combined_map = Precision(
+                num_classes=9,
+                average="macro",
+            )
         ivt_metric = ivtmetrics.Recognition(num_class=100)
 
         with torch.no_grad():
             for batch in tqdm(dataloader):
-                tool_logit, target_logit, verb_logit, triplet_logit = model(
-                    batch["image"].to(args.device)
-                )
-
+                if args.is_combined:
+                    (
+                        tool_logit,
+                        target_logit,
+                        verb_logit,
+                        triplet_logit,
+                        target_combined_logit,
+                    ) = model(batch["image"].to(args.device))
+                else:
+                    tool_logit, target_logit, verb_logit, triplet_logit = model(
+                        batch["image"].to(args.device)
+                    )
                 triplet_map(triplet_logit.to("cpu"), batch["triplet"].to(torch.int))
                 tool_map(tool_logit.to("cpu"), batch["tool"].to(torch.int))
                 verb_map(verb_logit.to("cpu"), batch["verb"].to(torch.int))
                 target_map(target_logit.to("cpu"), batch["target"].to(torch.int))
+                if args.is_combined:
+                    target_combined_map(
+                        target_combined_logit.to("cpu"),
+                        model.target_combine_transform(batch["target"]).to(torch.int),
+                    )
 
                 tool_logit, target_logit, verb_logit, triplet_logit = (
                     softmax(tool_logit, dim=-1).detach().cpu().numpy(),
@@ -115,7 +143,11 @@ def validation(args):
                         post_verb_logit[i][index] = verb_logit[i][_triplet[2]]
                         post_target_logit[i][index] = target_logit[i][_triplet[3]]
 
-                combined_triplet_logit = 0.5 * post_tool_logit + 1.25 * post_verb_logit * post_target_logit + 1 * triplet_logit
+                combined_triplet_logit = (
+                    0.5 * post_tool_logit
+                    + 1.25 * post_verb_logit * post_target_logit
+                    + 1 * triplet_logit
+                )
 
                 arg_max = np.argmax(combined_triplet_logit, axis=1)
 
