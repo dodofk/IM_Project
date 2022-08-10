@@ -4,6 +4,7 @@ from omegaconf import DictConfig
 import timm
 import torch
 import torch.nn as nn
+import torch.nn.functional as f
 from pytorch_lightning import LightningModule
 from torchmetrics import Precision
 import ivtmetrics
@@ -52,6 +53,10 @@ class TripletBaselineModule(LightningModule):
             num_classes=self.class_num["target"],
             average="macro",
         )
+        self.train_target_combined_map = Precision(
+            num_classes=9,
+            average="macro",
+        )
         self.train_triplet_map = Precision(
             num_classes=self.class_num["triplet"],
             average="macro",
@@ -66,6 +71,10 @@ class TripletBaselineModule(LightningModule):
         )
         self.valid_target_map = Precision(
             num_classes=self.class_num["target"],
+            average="macro",
+        )
+        self.valid_target_combined_map = Precision(
+            num_classes=9,
             average="macro",
         )
         self.valid_triplet_map = Precision(
@@ -120,6 +129,11 @@ class TripletBaselineModule(LightningModule):
             # nn.Sigmoid(),
         )
 
+        # consider some class as same class
+        self.target_combined = nn.Sequential(
+            nn.Linear(self.feature_extractor.num_features, 9),
+        )
+
         self.verb_ts = nn.Sequential(
             getattr(nn, temporal_cfg.type)(
                 input_size=self.feature_extractor.num_features,
@@ -160,6 +174,18 @@ class TripletBaselineModule(LightningModule):
 
         self.triplet_map = self.contstruct_triplet_map()
 
+        self.target_to_combined = {
+            0: [0],
+            1: [1, 2, 3, 4, 5],
+            2: [6],
+            3: [7],
+            4: [8],
+            5: [9, 10, 11],
+            6: [12],
+            7: [13],
+            8: [14],
+        }
+
     def contstruct_triplet_map(self):
         with open(os.path.join(get_original_cwd(), self.hparams.triplet_map), "r") as f:
             triplet_map = f.read().split("\n")[1:-2]
@@ -188,6 +214,19 @@ class TripletBaselineModule(LightningModule):
             output[:, i, :] = self.feature_extractor(x[:, i, :, :, :])
         return output.to(self.device)
 
+    def target_combine_transform(self, target: torch.Tensor):
+        new_target = torch.zeros(target.size(0), 9).to(target.device)
+        for i in range(0, target.size(0)):
+            for j in range(0, 9):
+                idxs = self.target_to_combined[j]
+                flag = False
+                for _idx in idxs:
+                    if target[i][_idx] == 1:
+                        flag = True
+                new_target[i][j] = int(flag)
+
+        return new_target
+
     def forward(self, x):
         output_tensor = torch.zeros(
             [x.shape[0], x.shape[1], self.feature_extractor.num_features]
@@ -201,6 +240,7 @@ class TripletBaselineModule(LightningModule):
         tool_info = self.tool_information(feature[:, -1, :])
         tool_logit = self.tool_head(tool_info)
         target_logit = self.target_head(tool_info)
+        target_combined_logit = self.target_combined(tool_info)
         # tool_logit = self.tool_head(feature[:, -1, :])
         # target_logit = self.target_head(feature[:, -1, :])
 
@@ -209,7 +249,13 @@ class TripletBaselineModule(LightningModule):
         triplet_ts_feature, _ = self.triplet_ts(feature)
         triplet_logit = self.triplet_head(triplet_ts_feature[:, -1, :])
 
-        return tool_logit, target_logit, verb_logit, triplet_logit
+        return (
+            tool_logit,
+            target_logit,
+            verb_logit,
+            triplet_logit,
+            target_combined_logit,
+        )
 
     def step(self, batch: Any):
         """
@@ -229,26 +275,42 @@ class TripletBaselineModule(LightningModule):
         preds: the pred by our model (i guess it would be sth like preds = torch.argmax(logits, dim=-1))
         y: correspond to the task it should be action or tool
         """
-        tool_logit, target_logit, verb_logit, triplet_logit = self.forward(
-            batch["image"]
-        )
+        (
+            tool_logit,
+            target_logit,
+            verb_logit,
+            triplet_logit,
+            target_combined_logit,
+        ) = self.forward(batch["image"])
         tool_loss = self.criterion(tool_logit, batch["tool"])
         target_loss = self.criterion(target_logit, batch["target"])
+        target_combined_loss = self.criterion(
+            target_combined_logit, self.target_combine_transform(target_combined_logit)
+        )
         verb_loss = self.criterion(verb_logit, batch["verb"])
         triplet_loss = self.criterion(triplet_logit, batch["triplet"])
         return (
             self.hparams.loss_weight.tool_weight * tool_loss
             + self.hparams.loss_weight.target_weight * target_loss
             + self.hparams.loss_weight.verb_weight * verb_loss
-            + self.hparams.loss_weight.triplet_weight * triplet_loss,
+            + self.hparams.loss_weight.triplet_weight * triplet_loss
+            + target_combined_loss,
             tool_logit,
             target_logit,
+            target_combined_loss,
             verb_logit,
             triplet_logit,
         )
 
     def training_step(self, batch: Any, batch_idx: int):
-        loss, tool_logit, target_logit, verb_logit, triplet_logit = self.step(batch)
+        (
+            loss,
+            tool_logit,
+            target_logit,
+            verb_logit,
+            triplet_logit,
+            target_combined_logit,
+        ) = self.step(batch)
 
         # self.train_recog_metric.update(
         #     batch["triplet"].cpu().numpy(),
@@ -256,6 +318,10 @@ class TripletBaselineModule(LightningModule):
         # )
         self.train_tool_map(tool_logit, batch["tool"].to(torch.int))
         self.train_target_map(target_logit, batch["target"].to(torch.int))
+        self.train_target_combined_map(
+            target_combined_logit,
+            self.target_combine_transform(batch["target"]).to(torch.int),
+        )
         self.train_verb_map(verb_logit, batch["verb"].to(torch.int))
         self.train_triplet_map(triplet_logit, batch["triplet"].to(torch.int))
         self.log("train/loss", loss, on_step=True, on_epoch=True, prog_bar=False)
@@ -278,6 +344,12 @@ class TripletBaselineModule(LightningModule):
             on_epoch=True,
         )
         self.log(
+            "train/target_combined_mAP",
+            self.train_target_combined_map,
+            on_step=True,
+            on_epoch=True,
+        )
+        self.log(
             "train/triplet_mAP",
             self.train_triplet_map,
             on_step=True,
@@ -296,12 +368,23 @@ class TripletBaselineModule(LightningModule):
         # self.log("train/t_mAP", self.train_recog_metric.compute_global_AP("t")["mAP"])
 
     def validation_step(self, batch: Any, batch_idx: int):
-        loss, tool_logit, target_logit, verb_logit, triplet_logit = self.step(batch)
+        (
+            loss,
+            tool_logit,
+            target_logit,
+            verb_logit,
+            triplet_logit,
+            target_combined_logit,
+        ) = self.step(batch)
 
         self.valid_tool_map(tool_logit, batch["tool"].to(torch.int))
         self.valid_target_map(target_logit, batch["target"].to(torch.int))
         self.valid_verb_map(verb_logit, batch["verb"].to(torch.int))
         self.valid_triplet_map(triplet_logit, batch["triplet"].to(torch.int))
+        self.valid_target_combined_map(
+            target_combined_logit,
+            self.target_combine_transform(target_combined_logit).to(torch.int),
+        )
 
         self.log(
             "valid/tool_mAP",
@@ -318,6 +401,12 @@ class TripletBaselineModule(LightningModule):
         self.log(
             "valid/target_mAP",
             self.valid_target_map,
+            on_step=True,
+            on_epoch=True,
+        )
+        self.log(
+            "valid/target_combined_mAP",
+            self.valid_target_combined_map,
             on_step=True,
             on_epoch=True,
         )
@@ -358,10 +447,10 @@ class TripletBaselineModule(LightningModule):
         loss, tool_logit, target_logit, verb_logit, triplet_logit = self.step(batch)
 
         tool_logit, target_logit, verb_logit, triplet_logit = (
-            tool_logit.detach().cpu().numpy(),
-            target_logit.detach().cpu().numpy(),
-            verb_logit.detach().cpu().numpy(),
-            triplet_logit.detach().cpu().numpy(),
+            f.softmax(tool_logit).detach().cpu().numpy(),
+            f.softmax(target_logit).detach().cpu().numpy(),
+            f.softmax(verb_logit).detach().cpu().numpy(),
+            f.softmax(triplet_logit).detach.cpu().numpy(),
         )
 
         post_tool_logit, post_target_logit, post_verb_logit = (
