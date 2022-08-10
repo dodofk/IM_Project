@@ -223,6 +223,7 @@ class TripletBaselineModule(LightningModule):
                 for _idx in idxs:
                     if target[i][_idx] == 1:
                         flag = True
+                        break
                 new_target[i][j] = int(flag)
 
         return new_target
