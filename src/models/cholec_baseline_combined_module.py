@@ -299,7 +299,7 @@ class TripletBaselineModule(LightningModule):
             target_logit,
             verb_logit,
             triplet_logit,
-            target_combined_loss,
+            target_combined_logit,
         )
 
     def training_step(self, batch: Any, batch_idx: int):
