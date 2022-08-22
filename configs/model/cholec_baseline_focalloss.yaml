@@ -10,7 +10,7 @@ temporal_cfg:
   bidirectional: False
 
 focal_cfg:
-  alpha: None
+  alpha: 1
   gamma: 2
 
 

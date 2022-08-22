@@ -4,6 +4,7 @@ from omegaconf import DictConfig
 import timm
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from pytorch_lightning import LightningModule
 from torchmetrics import Precision
 import ivtmetrics
@@ -12,16 +13,20 @@ import numpy as np
 
 from pprint import pprint
 
-focal_loss = torch.hub.load(
-	'adeelh/pytorch-multi-class-focal-loss',
-	model='focal_loss',
-	alpha=None,
-	gamma=2,
-	reduction='mean',
-	device='gpu',
-	dtype=torch.float32,
-	force_reload=False
-)
+class FocalLoss(nn.Module):
+    def __init__(self, alpha=1.0, gamma=2.0):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+    def forward(self, inputs, targets):
+        '''
+        :param inputs: batch_size * dim
+        :param targets: (batch,)
+        :return:
+        '''
+        bce_loss = F.cross_entropy(inputs, targets)
+        loss = self.alpha * (1 - torch.exp(-bce_loss)) ** self.gamma * bce_loss
+        return loss
 
 class TripletBaselineModule(LightningModule):
     def __init__(
@@ -171,6 +176,11 @@ class TripletBaselineModule(LightningModule):
 
         self.triplet_map = self.contstruct_triplet_map()
 
+        self.focal_loss = FocalLoss(
+            alpha=focal_cfg.alpha,
+            gamma=focal_cfg.gamma,
+        )
+
     def contstruct_triplet_map(self):
         with open(os.path.join(get_original_cwd(), self.hparams.triplet_map), "r") as f:
             triplet_map = f.read().split("\n")[1:-2]
@@ -259,15 +269,15 @@ class TripletBaselineModule(LightningModule):
         # )
         
         # use focal loss instead
-        tool_loss = focal_loss(tool_logit, batch['tool', self.class_num['tool']], alpha=self.hparams.focal_cfg.alpha, gamma=self.hparams.focal_cfg.gamma)
-        target_loss = focal_loss(target_logit, batch['target'], self.class_num['target'], alpha=self.hparams.focal_cfg.alpha, gamma=self.hparams.focal_cfg.gamma)
-        verb_loss = focal_loss(verb_logit, batch["verb"], self.class_num['verb'], alpha=self.hparams.focal_cfg.alpha, gamma=self.hparams.focal_cfg.gamma)
-        triplet_loss = focal_loss(triplet_logit, batch['triplet'], self.class_num['triplet'], alpha=self.hparams.focal_cfg.alpha, gamma=self.hparams.focal_cfg.gamma)
-        return(
-            tool_loss, 
-            target_loss, 
-            verb_loss, 
-            triplet_loss,
+        tool_loss = self.focal_loss(tool_logit.float(), batch['tool'])
+        target_loss = self.focal_loss(target_logit.float(), batch['target'])
+        verb_loss = self.focal_loss(verb_logit.float(), batch['verb'])
+        triplet_loss = self.focal_loss(triplet_logit.float(), batch['triplet'])
+        return (
+            self.hparams.loss_weight.tool_weight * tool_loss
+            + self.hparams.loss_weight.target_weight * target_loss
+            + self.hparams.loss_weight.verb_weight * verb_loss
+            + self.hparams.loss_weight.triplet_weight * triplet_loss,
             tool_logit,
             target_logit,
             verb_logit,

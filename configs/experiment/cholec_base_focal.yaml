@@ -41,7 +41,7 @@ model:
     num_layers: 1
   
   focal_cfg:
-    alpha: None
+    alpha: 1
     gamma: 2
 
 callback:
