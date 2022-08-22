@@ -1,4 +1,4 @@
-_target_: src.models.cholec_baseline_focal_module.TripletBaselineModule
+_target_: src.models.cholec_baseline_focalloss_module.TripletBaselineModule
 use_timm: True
 backbone_model: swin_base_patch4_window7_224_in22k
 backbone_trainable: True
@@ -12,7 +12,7 @@ temporal_cfg:
 focal_cfg:
   alpha: None
   gamma: 2
-  
+
 
 optim:
   optim_name: AdamW
