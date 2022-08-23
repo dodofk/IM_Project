@@ -1,6 +1,7 @@
 # data process
 pandas
 numpy
+albumentations
 
 # --------- pytorch --------- #
 torch>=1.10.0

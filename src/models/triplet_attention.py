@@ -88,11 +88,12 @@ class TripletAttentionModule(LightningModule):
         )
 
         for p in self.feature_extractor.parameters():
-            p.requires_grad = self.hparams.backbone_trainable
+            p.requires_grad = backbone_trainable
 
         # swin transformer specific
-        for p in self.feature_extractor.layers[-1].parameters():
-            p.requires_grad = True
+        if not backbone_trainable:
+            for p in self.feature_extractor.layers[-1].parameters():
+                p.requires_grad = True
 
         self.tool_information = nn.Sequential(
             nn.Linear(
@@ -246,7 +247,7 @@ class TripletAttentionModule(LightningModule):
 
         tool_seq_info = self.tool_information(feature[:, -1, :, :])
 
-        tool_info = tool_seq_info.mean(dim=1)
+        tool_info = tool_seq_info[:, 0, :]
         tool_logit = self.tool_head(tool_info)
 
         attn_feature = self.attention_pre_fc(feature[:, -1, :, :])
@@ -262,10 +263,8 @@ class TripletAttentionModule(LightningModule):
 
         ts_feature, _ = self.ts(feature.mean(dim=2))
         ts_feature = self.ts_fc(ts_feature)
-        verb_logit = self.verb_head((ts_feature[:, -1, :] + tool_info) / 2)
-        triplet_logit = self.triplet_head(
-            (ts_feature[:, -1, :] + tool_info + attn_output.mean(dim=1)) / 3
-        )
+        verb_logit = self.verb_head(ts_feature[:, -1, :])
+        triplet_logit = self.triplet_head(ts_feature[:, -1, :])
 
         return tool_logit, target_logit, verb_logit, triplet_logit
 
