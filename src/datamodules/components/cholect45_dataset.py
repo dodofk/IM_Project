@@ -87,7 +87,7 @@ class CholecT45Dataset(Dataset):
             ]
         )
 
-        self.A_transform = transforms.Compose(
+        self.A_transform = A.Compose(
             [
                 A.RGBShift(p=0.5),
                 A.RandomBrightnessContrast(p=0.3),
