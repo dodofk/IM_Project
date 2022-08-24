@@ -128,11 +128,15 @@ class CholecT45Dataset(Dataset):
         for i, _image_id in enumerate(numbers):
             basename = "{}.png".format(str(_image_id).zfill(6))
             img_path = os.path.join(get_original_cwd(), self.img_dir, basename)
-            image = np.array(Image.open(img_path))
 
-            image = self.A_transform(image=image)["image"]
+            if self.split == "train":
+                image = np.array(Image.open(img_path))
 
-            image = Image.fromarray(image)
+                image = self.A_transform(image=image)["image"]
+
+                image = Image.fromarray(image)
+            else:
+                image = Image.open(img_path)
 
             image = self.transform(image)
 
