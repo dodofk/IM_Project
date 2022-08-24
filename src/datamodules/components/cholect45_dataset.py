@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader, Dataset, ConcatDataset
 from PIL import Image
 import torchvision.transforms.functional as tfunc
 from torchvision import transforms
+import albumentations as A
 
 import hydra
 from hydra.utils import get_original_cwd
@@ -86,6 +87,14 @@ class CholecT45Dataset(Dataset):
             ]
         )
 
+        self.A_transform = transforms.Compose(
+            [
+                A.RGBShift(p=0.5),
+                A.RandomBrightnessContrast(p=0.3),
+                A.ChannelDropout(p=0.03),
+            ],
+        )
+
         self.augment_transform = transforms.Compose(
             [
                 transforms.TrivialAugmentWide(),
@@ -119,7 +128,9 @@ class CholecT45Dataset(Dataset):
         for i, _image_id in enumerate(numbers):
             basename = "{}.png".format(str(_image_id).zfill(6))
             img_path = os.path.join(get_original_cwd(), self.img_dir, basename)
-            image = Image.open(img_path)
+            image = np.array(Image.open(img_path))
+
+            image = self.A_transform(image=image)["image"]
 
             image = self.transform(image)
 
