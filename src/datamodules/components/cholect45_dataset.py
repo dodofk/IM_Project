@@ -132,6 +132,8 @@ class CholecT45Dataset(Dataset):
 
             image = self.A_transform(image=image)["image"]
 
+            image = Image.fromarray(image)
+
             image = self.transform(image)
 
             if self.split == "train" and self.use_train_aug:
