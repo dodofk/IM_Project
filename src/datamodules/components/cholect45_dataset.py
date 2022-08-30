@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader, Dataset, ConcatDataset
 from PIL import Image
 import torchvision.transforms.functional as tfunc
 from torchvision import transforms
+import albumentations as A
 
 import hydra
 from hydra.utils import get_original_cwd
@@ -77,13 +78,21 @@ class CholecT45Dataset(Dataset):
         self.img_dir = img_dir
         self.transform = transforms.Compose(
             [
-                transforms.Resize(256),
-                transforms.CenterCrop(224),
+                transforms.Resize(224),
+                # transforms.CenterCrop(224),
                 transforms.ToTensor(),
                 transforms.Normalize(
                     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
                 ),
             ]
+        )
+
+        self.A_transform = A.Compose(
+            [
+                A.RGBShift(p=0.5),
+                A.RandomBrightnessContrast(p=0.3),
+                A.ChannelDropout(p=0.03),
+            ],
         )
 
         self.augment_transform = transforms.Compose(
@@ -119,7 +128,15 @@ class CholecT45Dataset(Dataset):
         for i, _image_id in enumerate(numbers):
             basename = "{}.png".format(str(_image_id).zfill(6))
             img_path = os.path.join(get_original_cwd(), self.img_dir, basename)
-            image = Image.open(img_path)
+
+            if self.split == "train":
+                image = np.array(Image.open(img_path))
+
+                image = self.A_transform(image=image)["image"]
+
+                image = Image.fromarray(image)
+            else:
+                image = Image.open(img_path)
 
             image = self.transform(image)
 
